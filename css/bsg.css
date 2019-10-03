@@ -233,17 +233,18 @@ z-index:1;
   top:50%;
 }
 #tabss {
-  height:80%;
+  height:85%;
   min-height: 200px;
   margin: 20px 0px 0px 0px;
+  position:relative;
 }
 .tab {
   float: left;
 }
 .tab label {
   background: #eee;
-  padding: 6px;
-  border: 4px solid gray;
+  padding: 5px;
+  border: 3px solid gray;
   margin-left: -4px;
   position: relative;
   left: 4px;
@@ -253,14 +254,14 @@ z-index:1;
 }
 .content {
   position: absolute;
-  top: 79px;
+  top: 20px;
   left: 0;
   background: white;
   text-align:left;
   right: 0;
   bottom: 0;
   padding: 10px;
-  border: 4px solid gray;
+  border: 3px solid gray;
   overflow-y:auto;
 }
 [type=radio]:checked ~ label {
