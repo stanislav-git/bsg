@@ -1,0 +1,65 @@
+@charset "UTF-8";
+body, html {
+  margin:0px;
+  padding:0px;
+  height: 100%;
+}
+* html #maket {
+  height: 100%;
+}
+#maket {
+  margin:0 auto;
+  min-height: 100%;
+  max-width: 1000px;
+  min-width: 800px;
+  margin-left: 30px;
+  margin-right: auto;
+  position:relative;
+}
+#left {
+  float:left;
+  margin-left:0px;
+  margin-top:0px;
+  margin-bottom:0px;
+  height:100%;
+  width:100px;
+}
+#cont{
+  margin-top:0px;
+  height:100%;
+  min-height:450px;
+  margin-left:110px;
+}
+
+#coord{
+  display:table;
+  table-layout: auto;
+  margin-top:10px;
+  width:80%;
+  vertical-align:middle;
+  margin-left:5px;
+  right:0px;
+  bottom:0px;
+}
+#coord > div{
+  display:table-row;
+  height:40px;
+}
+.cel {
+  display:table-cell;
+  border:1px solid #f5f5f5;
+}
+.cel a {
+margin-top:10px;
+margin-bottom:10px;
+color:black;
+}
+
+#coord > div > div{
+  display:table-cell;
+  font-family: "Crystal","Arial";
+  font-size:1.2em;
+  border:1px solid #202050;
+  text-align:center;
+  vertical-align:middle;
+}
