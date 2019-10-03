@@ -224,6 +224,7 @@ z-index:1;
 }
 #right_top a{
   color:white;
+  text-decoration:none;
 }
 #inform{
   position:absolute;
