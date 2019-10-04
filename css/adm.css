@@ -1,4 +1,12 @@
 @charset "UTF-8";
+@font-face{ 
+	font-family: 'crystalregular';
+        src: url('../fons/crystal_regular-webfont.eot');
+        src: url('../fons/crystal_regular-webfont.eot?#iefix') format('embedded-opentype'),
+	     url('../fons/Crystal-Regular.woff') format('woff'),
+	     url('../fons/Crystal_Regular.ttf') format('truetype'),
+	     url('../fons/crystal_regular-webfont.svg#crystalregular') format('svg');
+}
 body, html {
   margin:0px;
   padding:0px;
@@ -57,7 +65,7 @@ color:black;
 
 #coord > div > div{
   display:table-cell;
-  font-family: "Crystal","Arial";
+  font-family: "crystalregular","Arial";
   font-size:1.2em;
   border:1px solid #202050;
   text-align:center;

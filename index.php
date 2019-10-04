@@ -55,7 +55,7 @@ if ($num_rows==1 && $dest_data[0]['sid']==session_id()){
 	header('Location: auth.php'); // перезагружаем файл
 }
 if (isset($_GET['map'])){
-	$selec_pos=intval(trim($_GET['map']));
+	$selec_pos=intval(trim(stripslashes($_GET['map'])));
 } 
 $maps_cur = $pdo->prepare("SELECT * FROM maps WHERE id_map = ?");
 $maps_cur->execute([$cur_pos]);

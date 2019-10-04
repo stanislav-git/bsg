@@ -1,8 +1,11 @@
 @charset "UTF-8";
-@font-face { 
-    font-family: "Crystal";
-    src: url(../font/Crystal-Regular.woff) format("woff"), /* все современные браузеры, IE9+ */
-         url(../font/Crystal Regular.ttf) format("truetype"); /* все современные браузеры */
+@font-face{ 
+	font-family: 'crystalregular';
+        src: url('../fons/crystal_regular-webfont.eot');
+        src: url('../fons/crystal_regular-webfont.eot?#iefix') format('embedded-opentype'),
+	     url('../fons/Crystal-Regular.woff') format('woff'),
+	     url('../fons/Crystal_Regular.ttf') format('truetype'),
+	     url('../fons/crystal_regular-webfont.svg#crystalregular') format('svg');
 }
 body, html {
   margin:0px;
@@ -142,7 +145,7 @@ body, html {
 }
 #coord > div > div{
   display:table-cell;
-  font-family: "Crystal","Arial";
+  font-family: "crystalregular","Arial";
   color:white;
   min-height:77px;
   font-size:1.2em;
@@ -191,11 +194,10 @@ z-index:1;
   height:25%;
   top:60px;
   left:10px; 
-  font-family: Crystal;
+  font-family: "crystalregular","Verdana","Arial";
   color:white;
   text-align:left;
   display: inline-block;
-  font-weight: 600;
   font-size: 22px;
   z-index:3;
 }
@@ -213,9 +215,8 @@ z-index:1;
   margin:5px 10px 10px 10px;
   text-align:center;
   display: inline-block;
-  font-family: Crystal;
+  font-family: "crystalregular","Verdana","Arial";
   font-size:20px;
-  font-weight:100;
   vertical-align:middle;
   height:auto;
   padding-top:7px;
@@ -236,7 +237,7 @@ z-index:1;
 #tabss {
   height:85%;
   min-height: 200px;
-  margin: 20px 0px 0px 0px;
+  margin: 23px 0px 0px 0px;
   position:relative;
 }
 .tab {
@@ -244,25 +245,25 @@ z-index:1;
 }
 .tab label {
   background: #eee;
-  padding: 5px;
-  border: 3px solid gray;
-  margin-left: -4px;
+  padding: 6px;
+  border: 0px solid gray;
+  margin-left: 2px;
   position: relative;
-  left: 4px;
+  left: 0px;
 }
 .tab [type=radio] {
   display: none;
 }
 .content {
   position: absolute;
-  top: 20px;
+  top: 22px;
   left: 0;
   background: white;
   text-align:left;
   right: 0;
   bottom: 0;
   padding: 10px;
-  border: 3px solid gray;
+  border: 2px solid gray;
   overflow-y:auto;
 }
 [type=radio]:checked ~ label {
@@ -277,10 +278,9 @@ z-index:1;
 .countdown {
   margin-top:8px;
   width:100%;
-  font-family: Crystal;
+  font-family: "crystalregular","Verdana","Arial";
   color:white;
   display: inline-block;
-  font-weight: 80;
   text-align: center;
   font-size: 20px;
   text-align:center;
@@ -314,8 +314,7 @@ z-index:1;
 #deadline-message{
   margin-top:8px;
   width:100%;
-  font-family: Crystal;
-  font-weight: 80;
+  font-family: "crystalregular","Verdana","Arial";
   text-align: center;
   font-size: 20px;
   text-align:center;

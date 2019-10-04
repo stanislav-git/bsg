@@ -172,7 +172,7 @@ if (isset($_GET['ships'])){
 //флоты
 if (isset($_GET['fleet'])){
   if (isset($_GET['fuel'])){
-  echo "<script>alert('При удалении флота потеряно ",$_GET['fuel']," единиц тилиума.');</script>";
+  echo "<script>alert('При удалении флота потеряно ",stripslashes($_GET['fuel'])," единиц тилиума.');</script>";
   }
   echo '<h1>Fleets</h1><table border=1>';
   echo "<tr><th>Название</th>";
@@ -257,7 +257,7 @@ if (isset($_GET['maps'])){
     			echo "<div>";
   		}
   		echo "<div class='cel'";
-  		if ($row['id_map']==$_GET['maps']){
+  		if ($row['id_map']==stripslashes($_GET['maps'])){
      			echo " style='background-color:green;'";
   		}
   		$tro=$row['id_map'];
@@ -280,7 +280,7 @@ if (isset($_GET['maps'])){
    		echo "<div style='display:table;width:80%;margin-top:10px;'><div style='display:table-row;'>";
    		if (count($anom)<3){
    			echo "<div style='width:30%;display:table-cell;text-align:center;'><form id='add' method='post' action='edit.php'>
-<input type='hidden' name='m0' value='",$_GET['maps'],"'><input type='hidden' name='i0' value='0'><textarea rows='4' cols='30' name='t0'>";
+<input type='hidden' name='m0' value='",stripslashes($_GET['maps']),"'><input type='hidden' name='i0' value='0'><textarea rows='4' cols='30' name='t0'>";
      			echo "</textarea><hr>";
      			echo "<textarea rows='4' cols='30' name='s0'>";
      			echo "</textarea><hr><input type='submit' name='add' value='Добавить'>";
@@ -288,7 +288,7 @@ if (isset($_GET['maps'])){
    		}
    		foreach ($anom as $id_ano) {
      			echo "<div style='width:30%;display:table-cell;text-align:center;'><form id='add' method='post' action='edit.php'>
-<input type='hidden' name='id_ano' value='",$id_ano['id'],"'><input type='hidden' name='m0' value='",$_GET['maps'],"'>
+<input type='hidden' name='id_ano' value='",$id_ano['id'],"'><input type='hidden' name='m0' value='",stripslashes($_GET['maps']),"'>
 <textarea rows='4' cols='30' name='text'>";
      			echo $id_ano['anomaly'],"</textarea><hr>";
      			echo "<textarea rows='4' cols='30' name='scan'>";
