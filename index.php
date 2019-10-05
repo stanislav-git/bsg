@@ -4,22 +4,7 @@ if (!isset($_SESSION['user_id'])){
 	header('Location: auth.php'); // перезагружаем файл
 }
 include('connect.php');
-function ask_name($a1,$pdo)
-{
-	$b1=round(($a1/100-floor($a1/100))*100);
-	$q_nam_fleet = $pdo->prepare("SELECT name FROM destination WHERE `who` = ?");
-	$q_nam_fleet->execute([$b1]);
-	$nam_fleet=$q_nam_fleet->fetchColumn();
-	$ret=$nam_fleet;
-	if ($a1>100){
-		if (strpos($nam_fleet, "айлон") !== false) {
-		   $ret='Рейдер Сайлонов';
-		} else {
-		   $ret='Раптор '.$nam_fleet;
-		}
-	}
-	return $ret;
-}
+include('funct.php');
 //
 $stmt = $pdo->prepare("SELECT * FROM destination WHERE `who` = ?");
 $pos=(int)(trim($_SESSION['user_id']));
@@ -102,6 +87,7 @@ $head='<!DOCTYPE Html PUBLIC "-//W3C//DTD Html 4.01 Transitional//EN"
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
 $head=$head."<title>ПАНЕЛЬ НАВИГАЦИИ</title>
 <link href='css/bsg.css' rel='stylesheet' type='text/css'>
+<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
 </head><body>
 <div style='position:relative;min-height: 100%;margin-left:0px;margin-right:0px;background-image:url(\"img/fons/sector_";
 $head=$head.$m_cur[0]['name'].".jpg\"); background-size:100% 100%;'><div id='maket'>";
@@ -384,14 +370,6 @@ while ($row = $maps_data->fetch()) {
        <p><?php echo $fuel ?></p>
     </div>
 <?php
-$shiphere=$pdo->prepare("SELECT destination.who as who1,destination.`name` as name1, COUNT(ships.id) as cfl
-FROM destination
-LEFT JOIN ships ON destination.who=ships.fleet
-WHERE destination.who <> ? AND destination.locat = ?
-GROUP BY destination.who");
-$shiphere->execute(array($pos,$cur_pos));
-$ship_data = $shiphere->fetchAll(PDO::FETCH_ASSOC);
-$num_ship=count($ship_data);
 if ($fuel>0) {
 echo "<form id='scan1' method='post' action='scan.php'><input type='hidden' name='scan' value='",$ship_c,"'><input type='hidden' name='dest' value='",$cur_pos,"'>";
 echo "<a href=# onClick='document.getElementById(\"scan1\").submit();return false;'>";
@@ -407,10 +385,10 @@ if ($fuel>0) {echo "</a></form>";}
       <img id='im_rad' src='img/radar/<?php echo $dest_data[0]['radimage'];?>.gif' style='width:100%;height:auto;margin-bottom:0px;text-align:center;'>
     </div>
 <?php
-if ($num_ship>0) {echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:88px;left:43%;right:55%;'><img src='img/radar/mayk.gif'></div>";}
-if ($num_ship>1) {echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:95px;left:55%;right:43%;'><img src='img/radar/mayk.gif'></div>";}
-if ($num_ship>2) {echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:97px;left:40%;right:58%;'><img src='img/radar/mayk.gif'></div>";}
-if ($num_ship>3) {echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:120px;left:63%;right:35%;'><img src='img/radar/mayk.gif'></div>";}
+echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:88px;left:43%;right:55%;'><img class='mark' id='mark1' style='display:none;' src='img/radar/mayk.gif'></div>";
+echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:95px;left:55%;right:43%;'><img class='mark' id='mark2' style='display:none;' src='img/radar/mayk.gif'></div>";
+echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:97px;left:40%;right:58%;'><img class='mark' id='mark3' style='display:none;' src='img/radar/mayk.gif'></div>";
+echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:120px;left:63%;right:35%;'><img class='mark' id='mark4' style='display:none;' src='img/radar/mayk.gif'></div>";
 ?>
     </div>
     <div class="scrollbar" id="inform">
@@ -427,8 +405,10 @@ echo "<img src='img/scan/",$scan_cur[0]['name'],"-S.png' style='width:100%;heigh
 ?>
     </div>
 <div id="tabss">
-
 <?php
+//echo "<input type='hidden' id='current_position' value='",$cur_pos,"'><input type='hidden' id='select_position' value='",$selec_pos,"'>";
+//поиск кораблей
+//аномалии
 $stm = $pdo->prepare("SELECT DISTINCT scanning.id_ano, scanning.level, anom.anomaly, anom.scanned, scanning.report
 FROM scanning, anom WHERE scanning.who=:who AND scanning.id_ano=anom.id AND anom.map=:id_map");
 $stm->bindValue(':id_map',$info_pos);
@@ -439,9 +419,9 @@ $num_row=count($anom_data);
 if ($num_row>0){
   $jc=$num_row;
   foreach ($anom_data as $dd) {
-    echo "<div class='tab'><input type='radio' id='tab-",$jc,"'";
+    echo "<div class='tab'><input type='radio' id='tab-",$jc+100,"'";
     if ($jc==1) {echo " checked";}
-    echo " name='tab-group-1'><label for='tab-",$jc,"'";
+    echo " name='tab-group-1'><label for='tab-",$jc+100,"'";
     echo ">Объект ",$jc,"</label><div class='content'>";
     if ($dd['level']==0){
       echo "<p>",$dd['anomaly'],"</p>";
@@ -462,38 +442,12 @@ if ($num_row>0){
       echo "<h2>Отчет о разведке:</h2>";
       echo "<p>",$dd['report'],"</p>";
     }
-    echo "</div>";
+    echo "</div></div>";
     $jc=$jc-1;
 //    print_r($dd);
   }
   unset($dd);
-}
-//поиск кораблей
-if (($selec_pos==0) or ($selec_pos==$cur_pos)){
-if ($num_ship>0){
-  $jc=$num_row;
-  foreach ($ship_data as $sd) {
-    echo "<div class='tab'><input type='radio' id='tab-",$jc+100,"'";
-    echo " name='tab-group-1'><label style='background-color:yellow;' for='tab-",$jc+100,"'>";
-    if ($sd['who1']<100){
-      echo "Fleet";
-    } else {
-      echo "Ship";
-    }
-    echo "</label><div class='content'>";                                                                         
-    echo "<h2>Отметка на радаре</h2>";
-    if ($sd['who1']<100){
-      echo "<p>Флот: <b>",$sd['name1'],"</b>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;кораблей во флоте: ",$sd['cfl'],"</p>";
-    } else {
-      echo "<p>";
-echo ask_name($sd['who1'],$pdo);
-echo "</p>";
-    }
-    echo "</div>";
-    $jc=$jc-1;
-  }
-  unset($sd);
-}
+  echo "</div>";
 }
 ?>
 </div>
@@ -502,6 +456,8 @@ echo "</p>";
 </div>
 </div>
 <script type="text/javascript">
+var cur_obj=document.getElementById('tabss').innerHTML;
+
 window.onload = function() {
           document.getElementById('coord').style.display = 'table';
 	  var blocks = document.getElementsByClassName( "cel" ); 
@@ -509,7 +465,44 @@ window.onload = function() {
 	    var hff = blocks[j].clientWidth;
 	    blocks[j].style.height = hff +'px'; 
 	  }
+	  setTimeout(detect_ship,100);
 }
+
+function detect_ship() {
+        $.ajax({
+            type: "POST",
+            url: "detect.php",
+            data: {current_pos:<?php echo $cur_pos ?>,select_pos:<?php echo $selec_pos ?>,myid:<?php echo $pos ?>},
+            success: function(json) {
+		var obj=JSON.parse(json);
+		var fleets='';               
+		var marks=obj.count;
+		if (marks>4){marks=4;}
+		for(var n=1; n<=marks; n++) {
+		    document.getElementsByClassName('mark')[n-1].style.display = 'block';
+ 		}
+		if (obj.current_pos==obj.select_pos || obj.select_pos==0) {
+		  for( var m=1; m<=obj.count; m++) {
+		    fleets=fleets+'<div class="tabf"><input type="radio" id="tab-'+m+'" name="tab-group-1"><label for="tab-'+m+'">';
+		    if (obj.fleets[m].type==2) {
+			fleets=fleets+'&nbsp;<img src="img/fleet.png" style="height:20px;width:auto;">&nbsp;';
+		    }
+		    if (obj.fleets[m].type==1) {
+			fleets=fleets+'&nbsp;<img src="img/ship.png" style="height:20px;width:auto;">&nbsp;';
+		    }
+		    fleets=fleets+'</label><div class="content">Отметка на радаре<hr>';
+		    if (obj.fleets[m].type==2) {fleets=fleets+'<b>Флот: </b>';}
+		    fleets=fleets+obj.fleets[m].fname;
+		    if (obj.fleets[m].type==2) {fleets=fleets+'<hr>Кораблей во флоте: '+obj.fleets[m].cship;}
+                    fleets=fleets+'</div></div>';
+		  }
+		}
+		document.getElementById('tabss').innerHTML=fleets+cur_obj;
+	   }
+       });
+       return false;
+}
+setInterval(detect_ship,20000);
 </script>
 </body>
 </html>

@@ -2,6 +2,7 @@
 session_start();
 if (isset($_SESSION['user_id'])) {
   	include('connect.php'); 
+  	include('funct.php');
 //прыжок
 
     if (isset($_GET['jump'])){
