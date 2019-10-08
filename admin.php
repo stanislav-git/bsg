@@ -45,9 +45,9 @@ if (isset($_GET['log'])){
     echo "<input type='text' name='name' size='20' maxlenght='50' value='",$row['name'],"'></td>";
     echo "<td><input type='text' size='9' maxlenght='10' name='pass' placeholder='новый пароль' value='' style='color:#F02020';></td>";
     if ($row['who']>100) {
-    	echo "<td><input type='number' size='2' min='0' max='30' name='loc' value='",$row['locat'],"'></td>";
+    	echo "<td><input type='number' size='2' min='0' max='42' name='loc' value='",$row['locat'],"'></td>";
     } else {
-    	echo "<td><input type='number' size='2' min='1' max='30' name='loc' value='",$row['locat'],"'></td>";
+    	echo "<td><input type='number' size='2' min='1' max='42' name='loc' value='",$row['locat'],"'></td>";
     }
     echo "<td><input type='checkbox' name='sid' value='",$row['who'],"'></td>";
     echo "<td>",date("d F H:i:s",$row['tim']),"</td>";
@@ -77,7 +77,7 @@ if (isset($_GET['ships'])){
 	}
         echo "</select>";
         unset($class);
-	echo "<input type='number' name='power' min='1' max='30' value='1'><input type='submit' name='add_ship' value='ADD'></p></form></div>";
+	echo "<input type='number' name='power' min='1' max='42' value='1'><input type='submit' name='add_ship' value='ADD'></p></form></div>";
 
 	$rwq=$ship_data->fetchAll(PDO::FETCH_ASSOC);
 	echo "<form method='post' action='fleeted.php'><p><input type='submit' name='add_fleet' value='Создать флот'></p><div style='float:left;width:5%;'>";
@@ -191,8 +191,8 @@ if (isset($_GET['fleet'])){
     echo "<form method='post' action='fleeted.php'><tr><td><input type='hidden' name='id' value='",$row['who'],"'>";
     echo "<input type='text' name='name' size='10' maxlenght='50' value='",$row['name'],"'></td>";
     echo "<td><input type='number' size='3' min='0' max='300000' name='fuel' value='",$row['fuel'],"'></td>";
-    echo "<td><input type='number' size='3' min='1' max='30' name='loc' value='",$row['locat'],"'></td>";
-    echo "<td><input type='number' size='3' min='0' max='30' name='dest' value='",$row['map_dest'],"'></td>";
+    echo "<td><input type='number' size='3' min='1' max='42' name='loc' value='",$row['locat'],"'></td>";
+    echo "<td><input type='number' size='3' min='0' max='42' name='dest' value='",$row['map_dest'],"'></td>";
     $maxt=time()+3540;
     echo "<td><input type='number' size='5' min='10' max='10000' name='tim_pre' value='",$row['tim_pre'],"'></td>";
     echo "<td><input type='number' size='5' min='10' max='10000' name='timer' value='",$row['timer'],"'></td>";
@@ -228,9 +228,9 @@ if (isset($_GET['rapt'])){
   while ($row = $fleets->fetch()) {
     echo "<form method='post' action='fleeted.php'><tr><td nowrap>",floor($row['who']/100)," <input type='hidden' name='id' value='",$row['who'],"'>";
     echo "<input type='text' name='name' size='18' maxlenght='50' value='",$row['name'],"'></td>";
-    echo "<td><input type='number' size='3' min='0' max='30' name='fuel' value='",$row['fuel'],"'></td>";
-    echo "<td><input type='number' size='3' min='0' max='30' name='loc' value='",$row['locat'],"'></td>";
-    echo "<td><input type='number' size='3' min='0' max='30' name='dest' value='",$row['map_dest'],"'></td>";
+    echo "<td><input type='number' size='3' min='0' max='42' name='fuel' value='",$row['fuel'],"'></td>";
+    echo "<td><input type='number' size='3' min='0' max='42' name='loc' value='",$row['locat'],"'></td>";
+    echo "<td><input type='number' size='3' min='0' max='42' name='dest' value='",$row['map_dest'],"'></td>";
     $maxt=time()+3540;
     echo "<td><input type='number' size='5' min='5' max='10000' name='tim_pre' value='",$row['tim_pre'],"'></td>";
     echo "<td><input type='number' size='5' min='10' max='10000' name='timer' value='",$row['timer'],"'></td>";

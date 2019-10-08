@@ -7,7 +7,9 @@ $head="<html>
 <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
 <title>Авторизация</title>
 </head><body style='background-image:url(\"img/fons/hub_large.jpg\"); background-size: 100% 100%;'>
-	<div style='position:absolute;left:175px;top:130px;'><form action='auth.php' method='post'>
+        <div id='localtime' style='position:absolute;left:65px;top:60px;color:white;'>Локальное время: </div>
+        <div id='servertime' style='position:absolute;left:60px;top:100px;color:white;'>Время на сервере: ".date('H:i:s',time())."</div>
+	<div style='position:absolute;left:175px;top:130px;'><form action='auth.php' id='logi' method='post'>
 		<div style='width:100%;height:30%;color:white;font-family:\"Crystal\",\"Arial\";font-size:1.2em;text-align:center;'>";
 $foot="<br>&nbsp;</div><table>
 			<tr>
@@ -16,14 +18,25 @@ $foot="<br>&nbsp;</div><table>
 			</tr>
 			<tr>
 				<td style='color:white;'>Пароль:</td>
-				<td><input type='password' name='password' /></td>
+				<td><input type='hidden' name='times' value='' id='times'><input type='password' name='passw' /></td>
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type='submit' value='Авторизоваться' /></td>
+				<td><input type='button' value='Авторизоваться' onclick='timez();'/></td>
 			</tr>
 		</table>
-	</div></form></body></html>";
+	</div></form>
+<script type='text/javascript'>
+Data = new Date();
+Hour = Data.getHours();
+Minutes = Data.getMinutes();
+Seconds = Data.getSeconds();
+document.getElementById('localtime').innerHTML='<p>Текущее время: '+Hour+':'+Minutes+':'+Seconds+' TZ:'+Data.getTimezoneOffset()/60+'</p>';
+function timez(){
+  document.getElementById('times').value=Date.parse(Data)/1000;
+  document.getElementById(\"logi\").submit();
+}
+</script></body></html>";
 if (isset($_GET['logout'])) // блок обрабатывающий завершение сессии
 {
 	if (isset($_SESSION['user_id'])){
@@ -56,7 +69,7 @@ if (isset($_GET['logout'])) // блок обрабатывающий завер�
 //    		);
 //	}
  	setcookie('login', '', 0, "/");
-	setcookie('password', '', 0, "/");
+	setcookie('passw', '', 0, "/");
 //        session_destroy();
 	header('Location: auth.php'); // перезагружаем файл
 	exit;
@@ -86,7 +99,7 @@ if (isset($_SESSION['user_id']) and !isset($_GET['logout'])) // если юзе�
                   	$_SESSION=array();
 			session_destroy();
 	 		setcookie('login', '', 0, "/");
-			setcookie('password', '', 0, "/");
+			setcookie('passw', '', 0, "/");
 		  	header('Location: auth.php'); // перезагружаем файл
 		}
         }
@@ -96,13 +109,15 @@ if (!empty($_POST) && !isset($_SESSION['user_id']) && !isset($_GET['logout'])) {
 	// производим авторизацию если было обращение к файлу, а сессии еще не существует
 	// коннект к базе с юзерами
 	$login = (isset($_POST['login'])) ? trim($_POST['login']) : '';
+	$vart=abs(time()-(int)$_POST['times']);
+	if ($vart<100) {
 //пилоты рапторов
 	if (stripos($login, 'пилот') !== false) {
         	$stmt = $pdo->prepare("SELECT * FROM destination WHERE `name` = ?");
         	$stmt->execute([$login]);
    		$dest_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		$num_rows = count($dest_data);
-		$password = md5(trim($_POST['password']));
+		$password = md5(trim($_POST['passw']));
 		if ($num_rows >0) {
                 	$who=$dest_data[0]['name'];
 			if ($dest_data[0]['pass'] == $password){
@@ -123,7 +138,7 @@ if (!empty($_POST) && !isset($_SESSION['user_id']) && !isset($_GET['logout'])) {
 					// то записываем ему в куку логин с хешем пароля на 24 часа
  					$time = 86400;
  					setcookie('login', $login, time()+$time, "/");
-					setcookie('password', $password, time()+$time, "/");
+					setcookie('passw', $password, time()+$time, "/");
 					$mfleet=$pdo->prepare("SELECT locat, fuel FROM destination WHERE who= ?");
 					$mship=round(($rap_id/100-floor($rap_id/100))*100);
 					$mfleet->execute([$mship]);
@@ -184,7 +199,7 @@ if (!empty($_POST) && !isset($_SESSION['user_id']) && !isset($_GET['logout'])) {
            	$stmt->execute([$login]);
    	   	$dest_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	   	$num_rows = count($dest_data);
-	   	$password = md5(trim($_POST['password']));
+	   	$password = md5(trim($_POST['passw']));
 //Проверяем на админа
 	   	if ($login=='admin') {
 	         	if ($password=='f1c1592588411002af340cbaedd6fc33') {
@@ -193,7 +208,7 @@ if (!empty($_POST) && !isset($_SESSION['user_id']) && !isset($_GET['logout'])) {
 				session_write_close();
  				$time = 86400;
  				setcookie('login', $login, time()+$time, "/");
-				setcookie('password', $password, time()+$time, "/");
+				setcookie('passw', $password, time()+$time, "/");
 				header('Location: auth.php');
 				exit;
 	         	}
@@ -213,7 +228,7 @@ if (!empty($_POST) && !isset($_SESSION['user_id']) && !isset($_GET['logout'])) {
 					// то записываем ему в куку логин с хешем пароля на 24 часа
  					$time = 86400;
  					setcookie('login', $login, time()+$time, "/");
-					setcookie('password', $password, time()+$time, "/");
+					setcookie('passw', $password, time()+$time, "/");
  
 					//и перезагружаем скрипт
 					header('Location: auth.php');
@@ -251,31 +266,53 @@ if (!empty($_POST) && !isset($_SESSION['user_id']) && !isset($_GET['logout'])) {
 			die('');
 		}
 	}
+	} else {
+		$_SESSION=array();	
+		echo $head;
+		echo "У вас проблемы с временем или часовым поясом - отказано!";
+		echo $foot;
+		die('');
+	}
+
 }
 if (!isset($_SESSION['user_id'])) {
  // если сесси нет показваем форму авторизации
-	print '
+	echo "
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
 <title>Авторизация</title>
-</head><body style="background-image:url(\'img/fons/hub_large.jpg\'); background-size: 100% 100%;">
-	<div style="position:absolute;left:175px;top:130px;"><form action="auth.php" method="post">
+</head><body style='background-image:url(\"img/fons/hub_large.jpg\"); background-size: 100% 100%;'>
+        <div id='localtime' style='position:absolute;left:60px;top:60px;color:white;'>Локальное время: </div>
+        <div id='servertime' style='position:absolute;left:60px;top:90px;color:white;'>Время на сервере: ",Date('H:i:s',time()),"</div>
+	<div style='position:absolute;left:175px;top:130px;'><form action='auth.php' id='logi' method='post'>
 		<table>
 			<tr>
-				<td style="color:white;">Логин:</td>
-				<td><input type="text" name="login" /></td>
+				<td style='color:white;'>Логин:</td>
+				<td><input type='text' name='login' /></td>
 			</tr>
 			<tr>
-				<td style="color:white;">Пароль:</td>
-				<td><input type="password" name="password" /></td>
+				<td style='color:white;'>Пароль:</td>
+				<td><input type='hidden' name='times' value='' id='times'><input type='password' name='passw' /></td>
 			</tr>
 			<tr>
 				<td></td>
-				<td><input type="submit" value="Авторизоваться" /></td>
+				<td><input type='button' value='Авторизоваться' onclick='timez();' /></td>
 			</tr>
 		</table>
-	</div></form></body></html>
-	';
+	</div></form>
+<script  type='text/javascript'>
+Data = new Date();
+Hour = Data.getHours();
+Minutes = Data.getMinutes();
+Seconds = Data.getSeconds();
+document.getElementById('localtime').innerHTML='Текущее время: '+Hour+':'+Minutes+':'+Seconds+' TZ:'+Data.getTimezoneOffset()/60;
+
+function timez() {
+  document.getElementById('times').value=Date.parse(Data)/1000;
+  document.getElementById(\"logi\").submit();
+}
+</script></body></html>
+";
 }
 ?>

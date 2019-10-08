@@ -20,8 +20,9 @@ if (isset($_SESSION['user_id'])) {
         	$cur_pos=$dest_data[0]['locat'];
         	$timer=$dest_data[0]['timer'];
         	$jump_do=$dest_data[0]['jumping'];
-        	$jump=$timer+$jump_do;
-
+        	$jump=$timer+time();        	
+//отсчет времени от момента прыжка, когда он был
+//        	$jump=$timer+$jump_do;
         	$dest_pos=$dest_data[0]['map_dest'];
         	$fuel=$dest_data[0]['fuel'];
       	}	 
@@ -60,7 +61,9 @@ if (isset($_SESSION['user_id'])) {
         	header('Location: index.php');
         	exit;
       	} else {
-		die('недостаточно топлива');
+        	header('Location: index.php');
+//		die('недостаточно топлива');
+		exit;
       	}
 }
 //отмена прыжка

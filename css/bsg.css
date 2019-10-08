@@ -245,11 +245,6 @@ z-index:1;
   height:24px;
 
 }
-.tabf {
-  float: left;
-  height:24px;
-	
-}
 .tab label {
   display:block;
   background: #eee;
@@ -260,23 +255,7 @@ z-index:1;
   position: relative;
   left: 0px;
 }
-.tabf label {
-  display:block;
-  background: #eee;
-  padding-left: 6px;
-  padding-right: 6px;
-  padding-top: 6px;
-  padding-bottom: 6px;
-  height:22px;
-  border: 0px solid gray;
-  margin-left: 2px;
-  position: relative;
-  left: 0px;
-}
 .tab [type=radio] {
-  display: none;
-}
-.tabf [type=radio] {
   display: none;
 }
 .content {

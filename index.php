@@ -1,13 +1,83 @@
 <?php
+if (isset($_COOKIE['sess'])){session_id($_COOKIE['sess']);}
 session_start();
-if (!isset($_SESSION['user_id'])){
-	header('Location: auth.php'); // перезагружаем файл
-}
 include('connect.php');
+if (isset($_COOKIE['sess']) or isset($_SESSION['user_id'])) {
+        if (isset($_SESSION['user_id'])){
+		$sess=session_id();
+	} else {
+		$sess=$_COOKIE['sess'];
+	}
+//проверяем, валидная ли кука по времени в БД, может кто уже зашел
+	$quser=$pdo->prepare("SELECT who,name,pass,locat,sid,tim FROM destination WHERE sid=?");
+	$quser->execute([$sess]);
+	$ask_user = $quser->fetchAll(PDO::FETCH_ASSOC);
+	$num_rows = count($ask_user);
+	if ($num_rows<>1) {
+		if (isset($_SESSION['user_id'])){
+			$_SESSION=array();
+			session_destroy();
+		}
+ 		setcookie('login', '', 1, "/");
+		setcookie('sess', '', 1, "/");
+		header('Location: testsess.php?err=6'); // перезагружаем файл
+		exit;
+	}
+	$tr=0;
+	if (isset($_SESSION['user_id'])){
+		if ($_SESSION['user_id']==$ask_user[0]['who']) {
+			$tr=1;
+		}
+	}
+	if (isset($_COOKIE['sess'])){
+		if ($_COOKIE['login']==$ask_user[0]['name']){
+			$tr=1;
+		}
+	}
+	if ($tr==1) {
+//сессия просрочена, обновляем
+		if (isset($_SESSION['user_id'])){
+			setcookie('login',$ask_user[0]['name'], time()+86400, "/");
+			setcookie('sess',$sess, time()+$ttlcookie, "/");
+		} else {
+			setcookie('login',$ask_user[0]['name'], time()+86400, "/");
+			setcookie('sess',$sess, time()+$ttlcookie, "/");
+		}
+		$pos=$_SESSION['user_id']=$ask_user[0]['who'];
+		$updlo = $pdo->prepare("UPDATE destination SET sid= ?, tim= unix_timestamp(NOW()) WHERE who=?");
+               	$updlo->execute(array($sess,$pos));
+//выйти из проверок
+	} else {
+//в сессии логин не совпал
+		if (isset($_SESSION['user_id'])){
+			$_SESSION=array();
+			session_destroy();
+		}
+		setcookie('login', '', 1, "/");
+		setcookie('sess', '', 1, "/");
+		header('Location: testsess.php?err=7'); // перезагружаем файл
+		exit;
+	}
+} else {
+	if (isset($_SESSION['user_id'])){
+		$_SESSION=array();
+		session_destroy();
+	}
+	setcookie('login', '', 1, "/");
+	setcookie('sess', '', 1, "/");
+	header('Location: testsess.php?err=0'); // перезагружаем файл
+	exit;
+}
+session_write_close();
 include('funct.php');
-//
+//мы уверены в актуальности чувака
+$selec_pos=0;
+$cur_pos=0;
+$pre_jump=0;
+$jump=0;
+$fuel=0;
+$dest_pos=0;
 $stmt = $pdo->prepare("SELECT * FROM destination WHERE `who` = ?");
-$pos=(int)(trim($_SESSION['user_id']));
 if ($pos>100){
 	$ship_c=round(($pos/100-floor($pos/100))*100);
 } else {
@@ -16,29 +86,20 @@ if ($pos>100){
 $stmt->execute([$pos]);
 $dest_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $num_rows = count($dest_data);
-
-$selec_pos=0;
-$cur_pos=0;
-$pre_jump=0;
-$jump=0;
-$fuel=0;
-$dest_pos=0;
-if ($num_rows==1 && $dest_data[0]['sid']==session_id()){
-	$uptime=$pdo->prepare("UPDATE destination SET tim= unix_timestamp(NOW()) WHERE who=?");
-    	$uptime->execute([$pos]);
-//    	session_write_close();
-        $cur_pos=$dest_data[0]['locat'];
-        $jump=$dest_data[0]['jumping'];
-        $pre_jump=$dest_data[0]['tim_pre'];
-        $timer=$dest_data[0]['timer'];
-        $dest_pos=$dest_data[0]['map_dest'];
-        $fuel=$dest_data[0]['fuel'];
-        $ffname=$dest_data[0]['name'];
-} else {
+//if ($num_rows==1 && $dest_data[0]['sid']==session_id()){
+$cur_pos=$dest_data[0]['locat'];
+$jump=$dest_data[0]['jumping'];
+$pre_jump=$dest_data[0]['tim_pre'];
+$timer=$dest_data[0]['timer'];
+$dest_pos=$dest_data[0]['map_dest'];
+$fuel=$dest_data[0]['fuel'];
+$ffname=$dest_data[0]['name'];
+//} else {
 //не найдена запись с текущими данными
-        $_SESSION=array();
-	header('Location: auth.php'); // перезагружаем файл
-}
+//        $_SESSION=array();
+//	session_write_close();
+//	header('Location: control.php'); // перезагружаем файл
+//}
 if (isset($_GET['map'])){
 	$selec_pos=intval(trim(stripslashes($_GET['map'])));
 } 
@@ -80,14 +141,13 @@ left JOIN scanning ON anom.id=scanning.id_ano AND scanning.who=? WHERE maps.id_m
   	}
 }
 
-$head='<!DOCTYPE Html PUBLIC "-//W3C//DTD Html 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
+$head='<!DOCTYPE Html>
 <html lang="ru-RU">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
 $head=$head."<title>ПАНЕЛЬ НАВИГАЦИИ</title>
 <link href='css/bsg.css' rel='stylesheet' type='text/css'>
-<script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
+<script type='text/javascript' src='js/jquery.min.js'></script>
 </head><body>
 <div style='position:relative;min-height: 100%;margin-left:0px;margin-right:0px;background-image:url(\"img/fons/sector_";
 $head=$head.$m_cur[0]['name'].".jpg\"); background-size:100% 100%;'><div id='maket'>";
@@ -379,7 +439,7 @@ echo "<div id='smessage'><p style='margin-top:0px;margin-bottom:0px'>скани�
 if ($fuel>0) {echo "</a></form>";}
 ?>
     <div id='power' style='float:right;width:15%;text-align:right;'>
-       <a href='auth.php?logout'><img src='img/power_green.png' style='width:100%;height:auto;'></a>    
+       <a href='logout.php?logout'><img src='img/power_green.png' style='width:100%;height:auto;'></a>    
     </div>
     <div id="radar">
       <img id='im_rad' src='img/radar/<?php echo $dest_data[0]['radimage'];?>.gif' style='width:100%;height:auto;margin-bottom:0px;text-align:center;'>
@@ -477,13 +537,14 @@ function detect_ship() {
 		var obj=JSON.parse(json);
 		var fleets='';               
 		var marks=obj.count;
-		if (marks>4){marks=4;}
-		for(var n=1; n<=marks; n++) {
-		    document.getElementsByClassName('mark')[n-1].style.display = 'block';
+		for(var n=1; n<=4; n++) {
+		    if (n<=marks){document.getElementsByClassName('mark')[n-1].style.display = 'block';} else {
+                        document.getElementsByClassName('mark')[n-1].style.display = 'none';
+		    }
  		}
 		if (obj.current_pos==obj.select_pos || obj.select_pos==0) {
-		  for( var m=1; m<=obj.count; m++) {
-		    fleets=fleets+'<div class="tabf"><input type="radio" id="tab-'+m+'" name="tab-group-1"><label for="tab-'+m+'">';
+		  for(var m=1; m<=obj.count; m++) {
+		    fleets=fleets+'<div class="tab"><input type="radio" id="tab-'+m+'" name="tab-group-1"><label for="tab-'+m+'">';
 		    if (obj.fleets[m].type==2) {
 			fleets=fleets+'&nbsp;<img src="img/fleet.png" style="height:20px;width:auto;">&nbsp;';
 		    }
@@ -502,7 +563,7 @@ function detect_ship() {
        });
        return false;
 }
-setInterval(detect_ship,20000);
+setInterval(detect_ship,15000);
 </script>
 </body>
 </html>
