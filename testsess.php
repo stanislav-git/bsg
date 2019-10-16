@@ -1,5 +1,5 @@
 <?php
-include('connect.php');
+include_once('modul/connect.php');
 $head="<html>
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
@@ -127,11 +127,22 @@ if (isset($_POST['login'])){
 	} else {
 		if ($login=='admin'){
 // Может админ?
-
-
+	         	if ($passw=='f1c1592588411002af340cbaedd6fc33') {
+				session_start();
+ 				$_SESSION['user_id'] = '0';
+				$_SESSION['user_name'] = $login;
+				session_write_close();
+ 				$time = 86400;
+ 				setcookie('login', $login, time()+$time, "/");
+				header('Location: admin.php');
+				exit;
+	         	} else {
+				$_SESSION=array();
+				session_destroy();
+				header('Location: testsess.php?err=2'); // перезагружаем файл
+				exit;
+			}
 //
-			header('Location: admin.php');
-			exit;
 		}	
 //Левый чувак	
 		header('Location: testsess.php?err=1'); // перезагружаем файл

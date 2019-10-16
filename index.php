@@ -1,7 +1,7 @@
 <?php
 if (isset($_COOKIE['sess'])){session_id($_COOKIE['sess']);}
 session_start();
-include('connect.php');
+include_once('modul/connect.php');
 if (isset($_COOKIE['sess']) or isset($_SESSION['user_id'])) {
         if (isset($_SESSION['user_id'])){
 		$sess=session_id();
@@ -34,7 +34,7 @@ if (isset($_COOKIE['sess']) or isset($_SESSION['user_id'])) {
 			$tr=1;
 		}
 	}
-	if ($tr==1) {
+	if ($tr==1 and $ask_user[0]['locat']<>0) {
 //сессия просрочена, обновляем
 		if (isset($_SESSION['user_id'])){
 			setcookie('login',$ask_user[0]['name'], time()+86400, "/");
@@ -69,7 +69,7 @@ if (isset($_COOKIE['sess']) or isset($_SESSION['user_id'])) {
 	exit;
 }
 session_write_close();
-include('funct.php');
+include_once('modul/funct.php');
 //мы уверены в актуальности чувака
 $selec_pos=0;
 $cur_pos=0;
@@ -108,7 +108,7 @@ $maps_cur->execute([$cur_pos]);
 $m_cur=$maps_cur->fetchAll(PDO::FETCH_ASSOC);
 if ($pos<100) {
 //Определяем флот и корабли с поломками
-	$qfleet = $pdo->prepare("SELECT sum(fuel) as fuel FROM ships WHERE `fleet` = ?");
+	$qfleet = $pdo->prepare("SELECT sum(typeship.jfuel) as fuel FROM ships join typeship on ships.type=typeship.id WHERE ships.`fleet` = ?");
   	$qfleet->execute([$pos]);
   	$fleet_data = $qfleet->fetch();
 
@@ -150,13 +150,17 @@ $head=$head."<title>ПАНЕЛЬ НАВИГАЦИИ</title>
 <script type='text/javascript' src='js/jquery.min.js'></script>
 </head><body>
 <div style='position:relative;min-height: 100%;margin-left:0px;margin-right:0px;background-image:url(\"img/fons/sector_";
-$head=$head.$m_cur[0]['name'].".jpg\"); background-size:100% 100%;'><div id='maket'>";
-$head=$head."<div id='left'><div id='panel1'><img src='img/fleet/".$dest_data[0]['image'].".png' style='width:100%;height:auto;'></div>";
-//echo session_id();
+$head=$head.$m_cur[0]['name'].".jpg\"); background-size:100% 100%;'><div id='maket'><div id='myModal' class='modal'>
+<div id='fleetdig' class='modal-content'>";
+//управление флотом
 
+$head1="</div></div><div id='left'><div id='panel1'><img src='img/fleet/".$dest_data[0]['image']."' style='width:100%;height:auto;'></div>";
+//echo session_id();
 if ($giper==0) {
 //неисправен гипердвигатель
-    print $head;
+print $head;
+include_once('modul/rulefleet.php');
+print $head1;
     print '<div id="countdown" class="countdown">
 		<div class="countdown-text">
         		<span>неисправность гипердвигателя</span>
@@ -176,7 +180,9 @@ if ($giper==0) {
 } else {
    if ($fuel<$fleet_data['fuel']) {
 //недостаточно топлива
-     print $head;
+print $head;
+include_once('modul/rulefleet.php');
+print $head1;
      print '<div id="countdown" class="countdown">
 		<div class="countdown-text">
         		<span>недостаточно тилиума</span>
@@ -199,7 +205,9 @@ if ($giper==0) {
      //инициирован прыжок или остывает
         if ($dest_pos==0) {
         //гипердвиг остывает, время не истекло
-           print $head;
+print $head;
+include_once('modul/rulefleet.php');
+print $head1;
            print '<div id="countdown" class="countdown">
       			<div class="countdown-text">
         			<span>идет зарядка гипердвигателя</span>
@@ -216,7 +224,7 @@ if ($giper==0) {
        			<span>&nbsp;</span>
 		      </div>";
       		if ($pos<100) {
-      		  	echo "<form id='jump' method='post' action='jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'><input type='hidden' name='dest' value='",$selec_pos,"'>";
+      		  	echo "<form id='jump' method='post' action='jobs/jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'><input type='hidden' name='dest' value='",$selec_pos,"'>";
                         echo "<a href=# onClick='document.getElementById(\"jump\").submit();return false;'>
         		<div class='dmessage' style='background-size:100% 100%; background-image:url(\"img/but-green-long-x.png\");'><span>ПРЫЖОК</span>
       			</div></a>";
@@ -225,14 +233,14 @@ if ($giper==0) {
                   if ($rap_jump==1) {
         		echo "<div style='width:100%;display:inline-table;margin-top:20px;margin-bottom:20px;'>
 <div style='width:4%;display:table-cell;'></div><div style='display:table-cell;background-size:100% 100%; padding-top:5px;padding-bottom:5px;background-image:url(\"img/but-green-long.png\");'>
-<form id='jump' method='post' action='jump.php'><input type='hidden' name='pre_jump' value='",$pre_jump,"'><input type='hidden' name='prep' value='",$pos,"'>
+<form id='jump' method='post' action='jobs/jump.php'><input type='hidden' name='pre_jump' value='",$pre_jump,"'><input type='hidden' name='prep' value='",$pos,"'>
 <input type='hidden' name='dest' value='",$selec_pos,"'><a href=# onClick='document.getElementById(\"jump\").submit();return false;'>
 <div style='display:inline-block;'><span>(ПРЫЖОК УДАЧНЫЙ)</span></div></a></form></div><div style='width:4%;display:table-cell;'></div><div style='background-size:100% 100%; padding-top:5px;padding-bottom:5px;background-image:url(\"img/but-grey-long.png\");display:table-cell;'>
-<form id='jumpx' method='post' action='jump.php'><input type='hidden' name='fprep' value='",$pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'><input type='hidden' name='dest' value='",$cur_pos,"'>
+<form id='jumpx' method='post' action='jobs/jump.php'><input type='hidden' name='fprep' value='",$pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'><input type='hidden' name='dest' value='",$cur_pos,"'>
 <a href=# onClick='document.getElementById(\"jumpx\").submit();return false;'><div style='display:inline-block;'><span>(ПРЫЖОК НЕУДАЧНЫЙ)</span></div></a></form></div><div style='width:4%;display:table-cell;'></div> 
       			</div>";
                   } else {
-      		  	echo "<form id='jump' method='post' action='jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'><input type='hidden' name='dest' value='",$selec_pos,"'>";
+      		  	echo "<form id='jump' method='post' action='jobs/jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'><input type='hidden' name='dest' value='",$selec_pos,"'>";
                         echo "<a href=# onClick='document.getElementById(\"jump\").submit();return false;'>
         		<div class='dmessage' style='background-size:100% 100%; background-image:url(\"img/but-green-long-x.png\");'><span>ПРЫЖОК</span>
       			</div></a>";
@@ -250,12 +258,14 @@ if ($giper==0) {
            echo "</div>";
         } else {
         //идет подготовка к прыжку
-           print $head;
+print $head;
+include_once('modul/rulefleet.php');
+print $head1;
            print '<div id="countdown" class="countdown">
       			<div class="countdown-text">
         			<span>расчет координат прыжка</span>
       			</div>';
-      		echo "<form id='jump' method='post' action='jump.php'><input type='hidden' name='cancel' value='",$pos,"'>";
+      		echo "<form id='jump' method='post' action='jobs/jump.php'><input type='hidden' name='cancel' value='",$pos,"'>";
       		echo "<a href=# onClick='document.getElementById(\"jump\").submit();return false;'><div class='countdown-number'>
         			<span class='hour countdown-time'></span>
         			<span class='minutes countdown-time'></span>
@@ -273,7 +283,9 @@ if ($giper==0) {
      } else {
         if ($dest_pos==0) {
         //гипердвиг остыл, готов к прыжку, координаты не заданы
-           print $head;
+print $head;
+include_once('modul/rulefleet.php');
+print $head1;
            print '<div id="countdown" class="countdown">
       			<div class="countdown-text">
         			<span>идет зарядка гипердвигателя</span>
@@ -290,7 +302,7 @@ if ($giper==0) {
        			<span>&nbsp;</span>
 		      </div>";
       		if ($pos<100) {
-      		  echo "<form id='jump' method='post' action='jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='dest' value='",$selec_pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'>";
+      		  echo "<form id='jump' method='post' action='jobs/jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='dest' value='",$selec_pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'>";
       		  
       		  echo "<a href=# onClick='document.getElementById(\"jump\").submit();return false;'>
         		<div class='dmessage' style='background-size:100% 100%; background-image:url(\"img/but-green-long-x.png\");'><span>ПРЫЖОК</span>
@@ -300,14 +312,14 @@ if ($giper==0) {
                   if ($rap_jump==1) {
         		echo "<div style='width:100%;display:inline-table;margin-top:20px;margin-bottom:20px;'>
 <div style='width:4%;display:table-cell;'></div><div style='display:table-cell;background-size:100% 100%; padding-top:5px;padding-bottom:5px;background-image:url(\"img/but-green-long.png\");'>
-<form id='jump' method='post' action='jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'>
+<form id='jump' method='post' action='jobs/jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'>
 <input type='hidden' name='dest' value='",$selec_pos,"'><a href=# onClick='document.getElementById(\"jump\").submit();return false;'>
 <div style='display:inline-block;'><span>(ПРЫЖОК УДАЧНЫЙ)</span></div></a></form></div><div style='width:4%;display:table-cell;'></div><div style='background-size:100% 100%; padding-top:5px;padding-bottom:5px;background-image:url(\"img/but-grey-long.png\");display:table-cell;'>
-<form id='jumpx' method='post' action='jump.php'><input type='hidden' name='fprep' value='",$pos,"'><input type='hidden' name='dest' value='",$cur_pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'>
+<form id='jumpx' method='post' action='jobs/jump.php'><input type='hidden' name='fprep' value='",$pos,"'><input type='hidden' name='dest' value='",$cur_pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'>
 <a href=# onClick='document.getElementById(\"jumpx\").submit();return false;'><div style='display:inline-block;'><span>(ПРЫЖОК НЕУДАЧНЫЙ)</span></div></a></form></div><div style='width:4%;display:table-cell;'></div> 
       			</div>";
                   } else {
-      		  	echo "<form id='jump' method='post' action='jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='dest' value='",$selec_pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'>";
+      		  	echo "<form id='jump' method='post' action='jobs/jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='dest' value='",$selec_pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'>";
                         echo "<a href=# onClick='document.getElementById(\"jump\").submit();return false;'>
         		<div class='dmessage' style='background-size:100% 100%; background-image:url(\"img/but-green-long-x.png\");'><span>ПРЫЖОК</span>
       			</div></a>";
@@ -323,7 +335,7 @@ if ($giper==0) {
            echo "</div>";
         } else {
         //прыжок завершен
-  	   header('Location: jump.php?jump'); // перезагружаем файл
+  	   header('Location: jobs/jump.php?jump'); // перезагружаем файл
         }
      }
    }
@@ -358,7 +370,7 @@ print 'if (t.total <= 0) {
       return true;';
 } else {
 print 'if (t.total <= 0) {
-  document.location.href = "jump.php?jump";
+  document.location.href = "jobs/jump.php?jump";
   clearInterval(timeinterval);
   return true;';
 }
@@ -382,7 +394,7 @@ echo '<script>
 </script>';
 }
 ?>
-    <div id="coord">
+    <div id="coord" class="b-toggle">
 <?php 
 $maps_data = $pdo->prepare("SELECT maps.id_map as idm, maps.name as mname, count(anom.id) as mano, scanning.who as mdet from maps left JOIN anom ON maps.id_map=anom.map 
 left JOIN scanning ON anom.id=scanning.id_ano AND scanning.who=? GROUP BY maps.id_map");
@@ -430,30 +442,13 @@ while ($row = $maps_data->fetch()) {
        <p><?php echo $fuel ?></p>
     </div>
 <?php
+echo "<div id='smessage'>";
 if ($fuel>0) {
-echo "<form id='scan1' method='post' action='scan.php'><input type='hidden' name='scan' value='",$ship_c,"'><input type='hidden' name='dest' value='",$cur_pos,"'>";
-echo "<a href=# onClick='document.getElementById(\"scan1\").submit();return false;'>";
+	echo "<form id='scan1' method='post' action='jobs/scan.php'><a href='#' style='display:block; height:100%;' onClick='document.getElementById(\"scan1\").submit();return false;'>";
 }
-echo "<div id='smessage'><p style='margin-top:0px;margin-bottom:0px'>сканировать сектор</p>
-	</div>";
+echo "<p style='margin-top:0px;margin-bottom:0px'><input type='hidden' name='scan' value='",$ship_c,"'><input type='hidden' name='dest' value='",$cur_pos,"'>сканировать сектор</p>";
 if ($fuel>0) {echo "</a></form>";}
-?>
-    <div id='power' style='float:right;width:15%;text-align:right;'>
-       <a href='logout.php?logout'><img src='img/power_green.png' style='width:100%;height:auto;'></a>    
-    </div>
-    <div id="radar">
-      <img id='im_rad' src='img/radar/<?php echo $dest_data[0]['radimage'];?>.gif' style='width:100%;height:auto;margin-bottom:0px;text-align:center;'>
-    </div>
-<?php
-echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:88px;left:43%;right:55%;'><img class='mark' id='mark1' style='display:none;' src='img/radar/mayk.gif'></div>";
-echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:95px;left:55%;right:43%;'><img class='mark' id='mark2' style='display:none;' src='img/radar/mayk.gif'></div>";
-echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:97px;left:40%;right:58%;'><img class='mark' id='mark3' style='display:none;' src='img/radar/mayk.gif'></div>";
-echo "<div style='position:absolute; width:20px;height:20px;z-index:100;top:120px;left:63%;right:35%;'><img class='mark' id='mark4' style='display:none;' src='img/radar/mayk.gif'></div>";
-?>
-    </div>
-    <div class="scrollbar" id="inform">
-    <div id="r2">
-<?php
+echo "</div>";
 if ($selec_pos<>0){
  $info_pos=$selec_pos;
 } else {
@@ -461,14 +456,6 @@ if ($selec_pos<>0){
 }
 $maps_cur->execute([$info_pos]);
 $scan_cur=$maps_cur->fetchAll(PDO::FETCH_ASSOC);
-echo "<img src='img/scan/",$scan_cur[0]['name'],"-S.png' style='width:100%;height:auto;'>";
-?>
-    </div>
-<div id="tabss">
-<?php
-//echo "<input type='hidden' id='current_position' value='",$cur_pos,"'><input type='hidden' id='select_position' value='",$selec_pos,"'>";
-//поиск кораблей
-//аномалии
 $stm = $pdo->prepare("SELECT DISTINCT scanning.id_ano, scanning.level, anom.anomaly, anom.scanned, scanning.report
 FROM scanning, anom WHERE scanning.who=:who AND scanning.id_ano=anom.id AND anom.map=:id_map");
 $stm->bindValue(':id_map',$info_pos);
@@ -476,6 +463,35 @@ $stm->bindValue(':who',$ship_c);
 $stm->execute();
 $anom_data = $stm->fetchAll(PDO::FETCH_ASSOC);
 $num_row=count($anom_data);
+$scanhere=0;
+foreach ($anom_data as $dd){
+  $scanhere=$scanhere+$dd['level'];
+}
+unset($dd);
+print "<div id='power' style='float:right;width:15%;text-align:right;'>
+       <a href='logout.php?logout'><img src='img/power_green.png' style='width:100%;height:auto;'></a></div>";
+
+if ($scanhere>0 and $pos<100) {print "<a href='#' id='myBtn' style='display:block;'><div id='info'>";} else {print "<div id='info' class='off'>";}
+print "<img src='img/dig.gif' style='height:100%;width:auto;'></div>";
+if ($scanhere>0 and $pos<100) {print "</a>";}
+echo "<div id='radar'>
+      <img id='im_rad' src='img/radar/",$dest_data[0]['radimage'],"' style='width:100%;height:auto;margin-bottom:0px;text-align:center;'></div>";
+echo "<div style='position:absolute; width:20px;height:20px;z-index:4;top:88px;left:43%;right:55%;'><img class='mark' id='mark1' style='display:none;' src='img/radar/mayk.gif'></div>";
+echo "<div style='position:absolute; width:20px;height:20px;z-index:4;top:95px;left:55%;right:43%;'><img class='mark' id='mark2' style='display:none;' src='img/radar/mayk.gif'></div>";
+echo "<div style='position:absolute; width:20px;height:20px;z-index:4;top:97px;left:40%;right:58%;'><img class='mark' id='mark3' style='display:none;' src='img/radar/mayk.gif'></div>";
+echo "<div style='position:absolute; width:20px;height:20px;z-index:4;top:120px;left:63%;right:35%;'><img class='mark' id='mark4' style='display:none;' src='img/radar/mayk.gif'></div>";
+?>
+    </div>
+    <div class="scrollbar" id="inform">
+    <div id="r2">
+<?php
+echo "<img src='img/scan/",$scan_cur[0]['name'],"-S.png' style='width:100%;height:auto;'>";
+?>
+    </div>
+<div id="tabss">
+<?php
+//поиск кораблей
+//аномалии
 if ($num_row>0){
   $jc=$num_row;
   foreach ($anom_data as $dd) {
@@ -519,19 +535,26 @@ if ($num_row>0){
 var cur_obj=document.getElementById('tabss').innerHTML;
 
 window.onload = function() {
-          document.getElementById('coord').style.display = 'table';
 	  var blocks = document.getElementsByClassName( "cel" ); 
 	  for( var j = 0; j < blocks.length; j++){ 
 	    var hff = blocks[j].clientWidth;
 	    blocks[j].style.height = hff +'px'; 
 	  }
-	  setTimeout(detect_ship,100);
+          var className = coord.className;
+          if( className.indexOf(' expanded') == -1 ){
+             className += ' expanded';
+          }
+          else {
+            className = className.replace(' expanded', '');
+         }
+         coord.className = className; 
+	 setTimeout(detect_ship,100);
 }
 
 function detect_ship() {
         $.ajax({
             type: "POST",
-            url: "detect.php",
+            url: "modul/detect.php",
             data: {current_pos:<?php echo $cur_pos ?>,select_pos:<?php echo $selec_pos ?>,myid:<?php echo $pos ?>},
             success: function(json) {
 		var obj=JSON.parse(json);
@@ -563,7 +586,18 @@ function detect_ship() {
        });
        return false;
 }
-setInterval(detect_ship,15000);
+setInterval(detect_ship,25000);
+// Get the modal
+var modal = document.getElementById('myModal');
+var btn = document.getElementById("myBtn");
+btn.onclick = function() {
+	$("#myModal").fadeIn();	
+}
+window.onclick = function(event) {
+    if (event.target == modal) {
+        $("#myModal").fadeOut(300);
+    }
+}
 </script>
 </body>
 </html>

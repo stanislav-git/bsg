@@ -11,6 +11,12 @@ body, html {
   margin:0px;
   padding:0px;
   height: 100%;
+  font-family:Arial,Verdana;
+  font-size:13px;
+}
+input, select {
+  font-family:Arial,Verdana;
+  font-size:12px;
 }
 * html #maket {
   height: 100%;
@@ -18,7 +24,7 @@ body, html {
 #maket {
   margin:0 auto;
   min-height: 100%;
-  max-width: 1000px;
+  max-width: 1200px;
   min-width: 800px;
   margin-left: 30px;
   margin-right: auto;
@@ -38,7 +44,44 @@ body, html {
   min-height:450px;
   margin-left:110px;
 }
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 5; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
 
+/* Modal Content */
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 70%;
+    min-width:695px;
+}
+
+/* The Close Button */
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
 #coord{
   display:table;
   table-layout: auto;
@@ -70,4 +113,48 @@ color:black;
   border:1px solid #202050;
   text-align:center;
   vertical-align:middle;
+}
+#tabss {
+  height:85%;
+  min-height: 350px;
+  margin: 15px 0px 0px 0px;
+  position:relative;
+}
+.tab {
+  float: left;
+  height:24px;
+
+}
+.tab label {
+  display:block;
+  background: #eee;
+  padding: 6px;
+  height:22px;
+  border: 0px solid gray;
+  margin-left: 2px;
+  position: relative;
+  left: 0px;
+}
+.tab [type=radio] {
+  display: none;
+}
+.content {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  background: white;
+  text-align:left;
+  right: 0;
+  bottom: 0;
+  padding: 10px;
+  border: 2px solid gray;
+  overflow-y:auto;
+}
+[type=radio]:checked ~ label {
+  background: white;
+  border-bottom: 1px solid white;
+  z-index: 2;
+}
+[type=radio]:checked ~ label ~ .content {
+  z-index: 1;
 }

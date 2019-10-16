@@ -1,5 +1,5 @@
 <?php
-include('connect.php');
+include_once('modul/connect.php');
 if (isset($_GET['logout'])){
 	session_start();
 	if (isset($_SESSION['user_id'])){
