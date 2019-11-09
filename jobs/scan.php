@@ -4,8 +4,13 @@ if (isset($_SESSION['user_id'])) {
   include_once('../modul/connect.php');
 //по кнопке сканирования
    if (isset($_POST['scan'])) {
-      $fuelst=$pdo->prepare("UPDATE destination SET `fuel`=`fuel`- 1 WHERE `who`= ?");
       $pos=$_SESSION['user_id'];
+	if ($pos<1000){	
+                $fuelst=$pdo->prepare("UPDATE resurs SET `fuel`=`fuel`- 1 WHERE `id_f`= ?");
+//писать ли в лог?
+	} else {
+                $fuelst=$pdo->prepare("UPDATE destination SET `fuel`=`fuel`- 1 WHERE `who`= ?");
+	}
       $fuelst->execute([$pos]);
       $who=trim($_POST['scan']);
       $dest=trim($_POST['dest']);

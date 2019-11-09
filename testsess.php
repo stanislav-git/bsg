@@ -1,14 +1,15 @@
 <?php
 include_once('modul/connect.php');
+include_once('modul/funct.php');
 $head="<html>
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
 <title>Авторизация</title>
 </head><body style='background-image:url(\"img/fons/hub_large.jpg\"); background-size: 100% 100%;'>
-        <div id='localtime' style='position:absolute;left:65px;top:60px;color:white;'>Локальное время: </div>
+        <div id='localtime' style='position:absolute;left:70px;top:60px;color:white;'>Локальное время: </div>
         <div id='servertime' style='position:absolute;left:60px;top:100px;color:white;'>Время на сервере: ".date('H:i:s',time())."</div>
 	<div style='position:absolute;left:175px;top:130px;'><form action='testsess.php' id='logi' method='post'>
-		<div style='width:100%;height:30%;color:white;font-family:\"Crystal\",\"Arial\";font-size:1.2em;text-align:center;'>";
+		<div style='width:100%;height:35%;padding-bottom:10px;color:white;font-family:\"Crystal\",\"Arial\";font-size:1.2em;text-align:center;'>";
 if (isset($_POST['login'])){
 	$login=$_POST['login'];
 	$passw=md5(trim($_POST['passw']));
@@ -78,8 +79,8 @@ if (isset($_POST['login'])){
 		$sess=session_id();
 		session_write_close();
 //топливо и позиция
-		$mfleet=$pdo->prepare("SELECT locat, fuel FROM destination WHERE who= ?");
-		$mship=round(($rap_id/100-floor($rap_id/100))*100);
+		$mfleet=$pdo->prepare("SELECT destination.locat as locat, resurs.fuel as fuel FROM destination join resurs on destination.who=resurs.id_f WHERE destination.who= ?");
+		$mship=round(($rap_id/1000-floor($rap_id/1000))*1000);
 		$mfleet->execute([$mship]);
 		$motherfleet=$mfleet->fetch();
 		$motfl=$motherfleet['locat'];
@@ -89,14 +90,9 @@ if (isset($_POST['login'])){
        			$upd->execute(array($motfl,$sess,time(),$rap_id));
        			$count = $upd->rowCount();
        			if ($count==1) {
-       				$mupd = $pdo->prepare("UPDATE destination set fuel = ? where who= ?");
-       				$mupd->execute(array($fuel,$mship));
-       				$counm = $mupd->rowCount();
-    				if ($counm <>1) {
-      					echo $mship," ",$rap_id;
-      					print_r($motherfleet);
-      					die('не обновлен mothership $mship');
-    				}
+				$text='Выпущен раптор';
+				resurs_upd($mship,$text,-1*10,0,0);
+				lost_human($mship,2,$text);
   			} else {
     				die('не обновлен раптор $mship');
   			}
@@ -150,7 +146,11 @@ if (isset($_POST['login'])){
 	}
 }
 if (!isset($_SESSION['user_id']) or !isset($_POST)) {
-	$foot="<br>&nbsp;</div><table>
+	$foot="";
+	if (isset($_COOKIE['access'])){
+		if ($_COOKIE['access']>0) {$foot=$foot."<a href='users/index.php' style='text-decoration: none;'><div id='back' style='width:100%;color:white;font-size:14px;background-size: 100% 100%;font-family:Arial;padding:5px 0px;background-image:url(\"img/but-red-long-x.png\");'>В ЛИЧНЫЙ КАБИНЕТ</div></a>";}
+	}
+	$foot=$foot."</div><table>
 			<tr>
 				<td style='color:white;'>Логин:</td>
 				<td><input type='text' name='login' /></td>
@@ -160,17 +160,17 @@ if (!isset($_SESSION['user_id']) or !isset($_POST)) {
 				<td><input type='hidden' name='times' value='' id='times'><input type='password' name='passw' /></td>
 			</tr>
 			<tr>
-				<td></td>
-				<td><input type='button' value='Авторизоваться' onclick='timez();'/></td>
+				<td colspan=2><input type='button' value='ВХОД В РУБКУ' style='width:100%;background-size: 100% 100%;color:white;font=size:14px;font-family:Arial;padding:5px 25px;background-image:url(\"img/but-green-long-x.png\");' onclick='timez();'/></td>
 			</tr>
 		</table>
-	</div></form>
-<script type='text/javascript'>
+	</div></form>";
+$script="<script type='text/javascript'>
 Data = new Date();
 Hour = Data.getHours();
 Minutes = Data.getMinutes();
 Seconds = Data.getSeconds();
 document.getElementById('localtime').innerHTML='<p>Текущее время: '+Hour+':'+Minutes+':'+Seconds+' TZ:'+Data.getTimezoneOffset()/60+'</p>';
+
 function timez(){
   document.getElementById('times').value=Date.parse(Data)/1000;
   document.getElementById(\"logi\").submit();
@@ -189,5 +189,6 @@ function timez(){
 		if ($_GET['err']==8){echo "8";}
 	}
 	print $foot;
+	print $script;
 }
 ?>

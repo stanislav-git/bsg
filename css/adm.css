@@ -14,13 +14,108 @@ body, html {
   font-family:Arial,Verdana;
   font-size:13px;
 }
-input, select {
-  font-family:Arial,Verdana;
-  font-size:12px;
-}
 * html #maket {
   height: 100%;
 }
+input[type=text],input[type=number]{
+        border-color: #e0e0e0;
+	background-color:#e0e0e0;
+	-webkit-border-radius: 3px;
+	border-radius: 3px;
+	-webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+	border-width: 1px;
+	border-style: solid;
+	color: #474e57;
+	font-size: 13px;
+	font-weight: 400;
+	padding: 4px;
+	width: auto;
+	margin:2px;
+}
+select {
+        border-color: #e0e0e0;
+	background-color:#e0e0e0;
+	-webkit-border-radius: 3px;
+	border-radius: 3px;
+	-webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+	border-width: 1px;
+	border-style: solid;
+	color: #474e57;
+	font-size: 13px;
+	font-weight: 400;
+	padding: 3px;
+	width: auto;
+}
+input[type=submit],input[type=button],button{
+   background-color: #68b12f;
+    background: -webkit-gradient(linear, left top, left bottom, from(#68b12f), to(#50911e));
+    background: -webkit-linear-gradient(top, #68b12f, #50911e);
+    background: -moz-linear-gradient(top, #68b12f, #50911e);
+    background: -ms-linear-gradient(top, #68b12f, #50911e);
+    background: -o-linear-gradient(top, #68b12f, #50911e);
+    background: linear-gradient(top, #68b12f, #50911e);
+    border: 1px solid #509111;
+    border-bottom: 1px solid #5b992b;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    -ms-border-radius: 3px;
+    -o-border-radius: 3px;
+    box-shadow: inset 0 1px 0 0 #9fd574;
+    -webkit-box-shadow: 0 1px 0 0 #9fd574 inset ;
+    -moz-box-shadow: 0 1px 0 0 #9fd574 inset;
+    -ms-box-shadow: 0 1px 0 0 #9fd574 inset;
+    -o-box-shadow: 0 1px 0 0 #9fd574 inset;
+    color: white;
+    font-weight: bold;
+    padding: 4px 6px;
+    text-align: center;
+    text-shadow: 0 -1px 0 #396715;
+}
+input[type=submit]:hover,button:hover,input[type=button]:hover {
+    opacity:.85;
+    cursor: pointer;
+}
+
+input[type=submit]:active,input[type=button]:active {
+    border: 1px solid #20911e;
+    box-shadow: 0 0 10px 5px #356b0b inset;
+    -webkit-box-shadow:0 0 10px 5px #356b0b inset ;
+    -moz-box-shadow: 0 0 10px 5px #356b0b inset;
+    -ms-box-shadow: 0 0 10px 5px #356b0b inset;
+    -o-box-shadow: 0 0 10px 5px #356b0b inset;
+}
+input[type=submit]:disabled {
+    background-color: #303030;
+    background: -webkit-gradient(linear, left top, left bottom, from(#303030), to(#808080));
+    background: -webkit-linear-gradient(top, #303030, #808080);
+    background: -moz-linear-gradient(top, #303030, #808080);
+    background: -ms-linear-gradient(top, #303030, #808080);
+    background: -o-linear-gradient(top, #303030, #808080);
+    background: linear-gradient(top, #303030, #808080);
+    box-shadow: inset 0 1px 0 0 #9fd574;
+    -webkit-box-shadow: 0 1px 0 0 #9fd574 inset ;
+    -moz-box-shadow: 0 1px 0 0 #9fd574 inset;
+    -ms-box-shadow: 0 1px 0 0 #9fd574 inset;
+    -o-box-shadow: 0 1px 0 0 #9fd574 inset;
+    border: 1px solid #303030;
+    border-bottom: 1px solid #404040;
+    box-shadow: inset 0 1px 0 0 #A9A9A9;
+    -webkit-box-shadow: 0 1px 0 0 #A9A9A9 inset ;
+    -moz-box-shadow: 0 1px 0 0 #A9A9A9 inset;
+    -ms-box-shadow: 0 1px 0 0 #A9A9A9 inset;
+    -o-box-shadow: 0 1px 0 0 #A9A9A9 inset;
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 -1px 0 #000000;
+    cursor: default;
+    opacity:1;
+}
+th {background-color: #EAF2D3;height:3em;}
+tr:nth-child(odd) { background-color: #EAF2D3; }
+h2 {margin-left:160px;}
 #maket {
   margin:0 auto;
   min-height: 100%;
@@ -36,15 +131,17 @@ input, select {
   margin-top:0px;
   margin-bottom:0px;
   height:100%;
-  width:100px;
+  width:110px;
 }
 #cont{
   margin-top:0px;
   height:100%;
   min-height:450px;
   margin-left:110px;
+  padding-top:30px;
 }
-.modal {
+
+div.modal {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
     z-index: 5; /* Sit on top */
@@ -59,13 +156,13 @@ input, select {
 }
 
 /* Modal Content */
-.modal-content {
+div.modal-content {
     background-color: #fefefe;
     margin: auto;
     padding: 20px;
     border: 1px solid #888;
-    width: 70%;
-    min-width:695px;
+    width:40%;
+    min-width:550px;
 }
 
 /* The Close Button */
@@ -120,17 +217,31 @@ color:black;
   margin: 15px 0px 0px 0px;
   position:relative;
 }
+.typeship {
+  width:100%;
+}
+.typeship table {
+ width:auto;
+ margin-left:40px;
+ vertical-align:middle;
+ text-align:center;
+}
+.typeship img { 
+  height:24px;
+  width:auto;
+  margin:0px;
+  border:0px;
+}
 .tab {
   float: left;
   height:24px;
-
 }
 .tab label {
   display:block;
   background: #eee;
   padding: 6px;
-  height:22px;
-  border: 0px solid gray;
+  height:17px;
+  border: 2px solid gray;
   margin-left: 2px;
   position: relative;
   left: 0px;

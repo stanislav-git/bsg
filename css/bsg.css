@@ -142,9 +142,9 @@ body, html {
 }
 .b-toggle {
   opacity:0;
-  -moz-transition: opacity 0.5s;
-  -ms-transition: opacity 0.5s;
-  transition: opacity 0.5s;
+  -moz-transition: opacity 0.3s;
+  -ms-transition: opacity 0.3s;
+  transition: opacity 0.3s;
 }
 .expanded {
   opacity:1;
@@ -199,23 +199,30 @@ z-index:2;
 }
 #info {
     position: absolute;
-    right: 10px;
+    right: 5px;
     bottom: 50px;
     width: auto;
     padding:10px;
-    height:12%;
+    height:18%;
     text-align: right;
     display:inline-block;
-    font-family: "crystalregular","Verdana","Arial";
     color:white;
-    background-size:100% 100%;
-    background-image:url('../img/but-green.png');
-    font-size: 20px;
     z-index:1;
 }
 #info.off {
-    background-size:100% 100%;
-    background-image:url('../img/but-grey.png');
+}
+#management{
+    position: absolute;
+    left: 5px;
+    bottom: 50px;
+    width: auto;
+    padding:10px;
+    height:20%;
+}
+#management img,
+#info img {
+ height:100%;
+ width:auto;
 }
 /* The Modal (background) */
 .modal {
@@ -249,52 +256,71 @@ z-index:2;
 
 #fleets {
    width:100%;
-  height:30%;
+   font-family: "crystalregular","Verdana","Arial";
+   font-size:26px;
+   padding-bottom:16px;
 }
 #dfuel {
 float:left;
-width:31%;
+width:32%;
 margin-left:0px;
 position:relative;
-height:70%;
+height:90%;
+height:-moz-calc(100% - 47px);
+height:-webkit-calc(100% - 47px);
+height:calc(100% - 47px);
 }
 #dwater {
 float:left;
-width:31%;
+width:32%;
+margin-left:2%;
 position:relative;
-height:70%;
+height:90%;
+height:-moz-calc(100% - 47px);
+height:-webkit-calc(100% - 47px);
+height:calc(100% - 47px);
 
 }
 #dcomp {
 float:right;
-width:31%;
+width:32%;
 position:relative;
-height:70%;
-
+height:90%;
+height:-moz-calc(100% - 47px);
+height:-webkit-calc(100% - 47px);
+height:calc(100% - 47px);
 }
 .but {
 width:100%;
 text-align:center;
-}
-.but img {
-height:20px;
-width:auto;
+   font-family: "crystalregular","Verdana","Arial";
+   font-size:18px;
 }
 .titl {
+height:44px;
 width:100%;
 text-align:center;
 }
+.titl img {
+height:20px;
+width:auto;
+}
+
 .cont {
 position:relative;
 width:100%;
-height:70%;
+height:85%;
+height:-moz-calc(100% - 70px);
+height:-webkit-calc(100% - 70px);
+height:calc(100% - 70px);
 }
 .contt {
-position:absolute;
-left:0px;
-top:0px;
-right:0px;
-bottom:0px;
+  position:absolute;
+  overflow-y:auto;
+  left:0px;
+  top:0px;
+  right:0px;
+  bottom:0px;
 }
 
 /* The Close Button */

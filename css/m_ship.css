@@ -1,0 +1,56 @@
+#dships1,#dships2,#dships3 {
+  width:33%;
+  text-align:left;
+  padding: 0px 3px;
+  font-family: 'AGLetter';
+  font-size: 14px;
+  line-height: 1.5em;
+}
+figure {
+  margin:0px;
+  text-align:center;
+  position:relative;
+}
+#larrow {
+position:absolute;
+top:0px;
+bottom:0px;
+left:0px;
+width:50%;
+}
+#rarrow {
+position:absolute;
+top:0px;
+bottom:0px;
+right:0px;
+width:50%;
+}
+figure>img{
+width:100%;
+height:auto;
+max-width:350px;
+}
+nav {
+padding:10px 0px;
+line-height:1.5em;
+}
+#logoff{
+position:absolute;
+right:15px;
+top:15px;
+width:50px;
+height:50px;
+z-index:1;
+}
+#logoff>img {
+width:100%;
+height:auto;
+}
+.main-content{
+position:relative;
+}
+nav select{
+font-size: 15px;
+font-weight: 400;
+font-family: 'BebasRegular';
+}

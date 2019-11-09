@@ -39,6 +39,8 @@ if (isset($_POST['save'])){
   $updb->bindParam(':scanned', $scanned);
   $updb->bindParam(':id_ano', $id_ano);
   $updb->bindParam(':resurs', $resurs);
+	$quality=(int)($quality*100)/100;
+//	echo $quality;
   $updb->bindParam(':quality', $quality);
   $updb->execute();
   header('Location: ../admin.php?maps='.$maps);

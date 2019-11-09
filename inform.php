@@ -1,104 +1,251 @@
 <?php
+session_start();
 include_once('modul/connect.php');
-$fleet=1;
+include_once('modul/funct.php');
 if (isset($_POST['fleet'])) {$fleet=$_POST['fleet'];}
 if (isset($_GET['fleet'])) {$fleet=$_GET['fleet'];}
 if (isset($fleet)) {
-	$head='<!DOCTYPE Html>
-<html lang="ru-RU">
+	$head='<!DOCTYPE Html><html lang="ru-RU">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>ИНФОРМАЦИОННАЯ ПАНЕЛЬ</title>
 <link href="css/info.css" rel="stylesheet" type="text/css">
-<script type="text/javascript" src="js/jquery.min.js"></script>
-</head><body><div style="position:relative;min-height: 100%;margin-left:0px;margin-right:0px;background-image:url(\'img/fons/inform.jpg\'); background-size:100% 100%;">
-<div id="maket"><div id="myModal" class="modal"><div class="modal-content"></div></div>';
-        $qfl=$pdo->prepare("SELECT destination.name as fname, ships.fleet as fleet, destination.fuel as fuel, destination.water as water, 
-destination.comp as comp, SUM(typeship.jfuel) as jfuel, SUM(typeship.cargo) as cargo, SUM(typeship.rfuel) as rfuel, SUM(typeship.dfuel) as dfuel, 
-SUM(typeship.rwater) as rwater, SUM(typeship.dwater) as dwater, SUM(typeship.rcomp) as rcomp, SUM(typeship.dcomp) as dcomp, SUM(ships.human) as human
+<link rel="stylesheet" href="css/jquery.bxslider.css">
+<script type="text/javascript" src="js/jquery11.min.js"></script>
+<script src="js/jquery.bxslider.js"></script>
+</head><body>';
+        $qfl=$pdo->prepare("SELECT destination.enemy as enemy, norms.p1 as proiz, moral.vera as vera, moral.hope as hope, destination.name as fname,
+destination.locat as locat, ships.fleet as fleet, resurs.fuel as fuel, resurs.water as water,norms.n2 as norm_w,norms.n3 as norm_c, 
+resurs.comp as comp, SUM(typeship.jfuel) as jfuel, SUM(typeship.cargo) as cargo, SUM(typeship.rfuel) as rfuel, SUM(typeship.dfuel) as dfuel, 
+SUM(typeship.rwater) as rwater, round(SUM(typeship.dwater)*norms.p1*hope/10000) as dwater, round(SUM(typeship.rcomp)*norms.p1*hope/10000) as rcomp, round(SUM(typeship.dcomp)*norms.p1*hope/10000) as dcomp,
+SUM(ships.human) as human, round(SUM(ships.human)*norms.n2*vera*0.2/10000) AS hwater, round(SUM(ships.human)*norms.n3*vera*0.1/10000) AS hcomp
 FROM ships
 JOIN typeship ON ships.`type`=typeship.id
 JOIN destination ON ships.fleet=destination.who
+join resurs on ships.fleet=resurs.id_f
+join norms ON ships.fleet=norms.id_f
+join moral on ships.fleet=moral.id_f
 WHERE destination.who=?
 GROUP BY ships.fleet");
-	$qtype=$pdo->prepare("SELECT ships.fleet AS fleet, ships.`type` as stype, count(typeship.id) AS ncount
+	$qtype=$pdo->prepare("SELECT ships.fleet AS fleet, typeship.`cargo` as stype, typeship.sizz, count(typeship.id) AS ncount
 FROM ships
 JOIN typeship ON ships.`type`=typeship.id
 JOIN destination ON ships.fleet=destination.who
 WHERE destination.who=?
-GROUP BY ships.type");
+GROUP BY typeship.sizz");
         $qtype->execute([$fleet]);
-        $ships_type=$qtype->fetchAll(PDO::FETCH_ASSOC);
-	$ships_huge=0;
-	$ships_big=0;
-	$ships_small=0;
-        foreach ($ships_type as $sd) {
-		if ($sd['stype']<3) {$ships_huge=$ships_huge+$sd['ncount'];}
-		if ($sd['stype']>2 and $sd['stype']<7) {$ships_big=$ships_big+$sd['ncount'];}
-		if ($sd['stype']>6) {$ships_small=$ships_small+$sd['ncount'];}
+	$ships_d=array(1=>0,2=>0,3=>0);
+        while ($ships_type=$qtype->fetch()){
+		$ships_d[$ships_type['sizz']]=$ships_type['ncount'];
 	}
-	$ships_all=$ships_huge+$ships_big+$ships_small;
+	$ships_all=$ships_d[1]+$ships_d[2]+$ships_d[3];
 	unset($sd);
 //        $ships_big=count($ships_type['']);
 	$qfl->execute([$fleet]);
 	$fl_data=$qfl->fetch();
-	echo $head;
+	echo $head;                                                                  
+	if ($fl_data['enemy']==1){
+		$bg='img/info/cyl/inform.jpg';
+		$imnews='img/info/cyl/event.png';
+		$imres='img/info/cyl/cyl_resurses.png';
+		$logo='img/info/cyl/logo_cyl.png';
+		$imfleet='img/info/cyl/cyl_fleets.png';
+	        $imnastr='img/info/cyl/cyl_nastr.png';
+		$imrealise='img/info/cyl/cyl_realise_big.png';
+		$improj='img/info/cyl/cyl_project.png';
+		$iminit='img/info/cyl/cyl_init.png';
+		$improg='img/info/cyl/empty_cyl.png';
+		$imruk='img/info/cyl/cyl_ruk.png';
+		$imvla='img/info/cyl/cyl_vlast.png';
+		$imsup='img/info/cyl/cyl_hold.png';
+		$diz1='cnews_cyl';
+	} else {
+		$diz1='cnews';
+		$bg='img/info/col/inform.jpg';
+		$imnews='img/info/col/event.png';
+		$imres='img/info/col/resurs.png';
+		$logo='img/info/col/pechat.png';
+		$imfleet='img/info/col/sostav_flota.png';
+	        $imnastr='img/info/col/nastroenia.png';
+		$imrealise='img/info/col/realise_big.png';
+		$improj='img/info/col/project.png';
+		$iminit='img/info/col/init.png';
+		$improg='img/info/col/empty.png';
+		$imruk='img/info/col/rukovod.png';
+		$imvla='img/info/col/vlast.png';
+		$imsup='img/info/col/supp.png';
+	}
+	echo '<div style="position:relative;min-height: 100%;margin-left:0px;margin-right:0px;background-image:url(\'',$bg,'\'); background-size:100% 100%;">
+<div id="maket"><div id="myModal" class="modal"><div class="modal-content"></div></div>';
+
         mb_internal_encoding('UTF-8');
 	echo "<div id='head'>ФЛОТ: ",mb_strtoupper($fl_data['fname']),"</div>";
-	echo "<div id='news'><div class='titl'><img src='img/event.png'></div><div id='cnews'>";
-	$qnews=$pdo->prepare("SELECT * from news where fleet=0 or fleet=? order by idn LIMIT 10");
+	echo "<div id='news'><div class='titl'><img src='",$imnews,"'></div><div id='",$diz1,"' class='slider'>";
+	$qnews=$pdo->prepare("SELECT * from news where fleet=0 or fleet=? order by timnews LIMIT 10");
 	$qnews->execute([$fleet]);
+//	echo "<div><img src='img/power_red.png' alt='' / style='width:100%;'></div>";
 	while ($news = $qnews->fetch()) {
-		echo "<p>",$news['news'],"</p>";
-		echo "<span>",$news['autor'],"</span>";
+		echo "<div><p>",$news['news'],"</p>";
+		echo "<span>",$news['autor'],"</span></div>";
 
 	}
 	echo "</div></div>";
-	echo "<div id='logo'><img src='img/pechat.png'><p style='margin-top:10px;'>",$fl_data['human'],"</p></div>";
-	echo "<div id='resurs'><div class='titl'><img src='img/resurs.png'></div><div id='cresurs'>
-<table style='width:100%;height:100%;border-spacing: 0px;padding-top:4px;'><tr><td></td><td style='width:22%;'>ПРОИЗВОДСТВО</td><td style='width:22%;'>ПОТРЕБЛЕНИЕ</td><td style='width:22%;'>РЕЗЕРВ</td><td style='width:22%;'>НЗ</td></tr>
-<tr><td><img src='img/tilium.gif'></td><td></td><td>",$fl_data['jfuel'],"/",$fl_data['rfuel'],"/</td><td></td><td>",$fl_data['fuel'],"</td></tr>
-<tr><td><img src='img/water.gif'></td><td></td><td>",$fl_data['rwater'],"/</td><td></td><td>",$fl_data['water'],"</td></tr>
-<tr><td><img src='img/detals.gif'></td><td></td><td>",$fl_data['rcomp'],"/</td><td></td><td>",$fl_data['comp'],"</td></tr>
-<tr><td colspan=5><div class='butt'>ОТЧЕТ ПО ОБЕСПЕЧЕНИЮ</div></td></tr>
+	echo "<div id='logo'><img src='",$logo,"'><p style='margin-top:10px;margin-bottom:5px;'>",$fl_data['human'],"</p></div>";
+
+$q_summ_dig_fuel=$pdo->prepare("SELECT round(sum(typeship.dfuel)*dig.quality*norms.p1*moral.vera/10000) as sfuel 
+FROM ships 
+JOIN typeship ON ships.`type`=typeship.id
+JOIN destination ON ships.fleet=destination.who 
+JOIN dig ON ships.id=dig.ship
+JOIN norms on ships.fleet=norms.id_f
+join moral on ships.fleet=moral.id_f
+WHERE destination.locat=? AND destination.who=? AND dig.resurs=1 and ships.repair=0");
+$q_summ_dig_fuel->execute(array($fl_data['locat'],$fleet));
+$dfuel=$q_summ_dig_fuel->fetch();
+
+$q_summ_dig_water=$pdo->prepare("SELECT round(sum(typeship.dwater)*dig.quality*norms.p1*moral.vera/10000) as swater FROM ships JOIN typeship ON ships.`type`=typeship.id
+JOIN destination ON ships.fleet=destination.who JOIN dig ON ships.id=dig.ship
+JOIN norms on ships.fleet=norms.id_f
+join moral on ships.fleet=moral.id_f
+WHERE destination.locat=? AND destination.who=? AND dig.resurs=2 and ships.repair=0");
+$q_summ_dig_water->execute(array($fl_data['locat'],$fleet));
+$dwater=$q_summ_dig_water->fetch();
+
+$q_summ_dig_comp=$pdo->prepare("SELECT round(sum(typeship.dcomp)*dig.quality*norms.p1*moral.vera/10000) as scomp FROM ships JOIN typeship ON ships.`type`=typeship.id
+JOIN destination ON ships.fleet=destination.who JOIN dig ON ships.id=dig.ship
+JOIN norms on ships.fleet=norms.id_f
+join moral on ships.fleet=moral.id_f
+WHERE destination.locat=? AND destination.who=? AND dig.resurs=3 and ships.repair=0");
+$q_summ_dig_comp->execute(array($fl_data['locat'],$fleet));
+$dcomp=$q_summ_dig_comp->fetch();
+
+	echo "<div id='resurs'><div class='titl'><img src='",$imres,"'></div><div id='cresurs'>
+<table style='width:100%;height:100%;border-spacing: 0px;padding-top:4px;'><tr><td></td><td style='width:22%;'><small>РЕЗЕРВ</small></td><td style='width:22%;'><small>ПРОИЗВОДСТВО</small></td><td style='width:22%;'><small>ПОТРЕБЛЕНИЕ</small></td><td style='width:22%;' nowrap><small>ТО / ПРЫЖОК</small></td></tr>
+<tr><td><img src='img/tilium.gif'></td><td>",$fl_data['fuel'],"</td><td>",$dfuel['sfuel']," : ",round($fl_data['proiz']/100,2),"</td><td></td><td>",$fl_data['rfuel']," / ",$fl_data['jfuel'],"</td></tr>
+<tr><td><img src='img/water.gif'></td><td>",$fl_data['water'],"</td><td>",$dwater['swater']," : ",round($fl_data['proiz']/100,2),"</td><td>",$fl_data['hwater']," : ",round($fl_data['norm_w']/100,2),"</td><td>",$fl_data['rwater'],"</td></tr>
+<tr><td><img src='img/detals.gif'></td><td>",$fl_data['comp'],"</td><td>",$dcomp['scomp']," : ",round($fl_data['proiz']/100,2),"</td><td>",$fl_data['hcomp']," : ",round($fl_data['norm_c']/100,2),"</td><td>",$fl_data['rcomp'],"</td></tr>
 </table>";
-	echo "</div></div>";                              
-	echo "<div id='stat'><div class='titl'><img src='img/stat.png'></div>
-<div id='statl'><div class='informer'>
-<table style='width:100%; height:100%;border-spacing: 0px;padding:0px;'><tr><td colspan=3 style='height:30px;'><div class='butt'>НАСТРОЕНИЯ</div></td></tr><tr>
-<td style='width:33%;vertical-align:bottom;'><img src='img/green.gif' style='width:20px;height:50%;'> <img src='img/red.gif' style='width:20px;height:50%;'></td>
-<td style='width:33%;vertical-align:bottom;'><img src='img/green.gif' style='width:20px;height:90%;'> <img src='img/red.gif' style='width:20px;height:10%;'></td>
-<td style='width:33%;vertical-align:bottom;'><img src='img/green.gif' style='width:20px;height:70%;'> <img src='img/red.gif' style='width:20px;height:30%;'></td></tr>
-<tr style='height:34px;'><td><span class='green'>вера</span><br><span class='red'>страх</span></td><td><span class='green'>надежда</span><br><span class='red'>отчаянье</span></td><td><span class='green'>лояльность</span><br><span class='red'>анархия</span></td></tr></table>                            
-</div></div>
-<div id='statr'><div class='informer'>
-<table style='width:100%; height:100%;border-spacing: 0px;padding:0px;'><tr><td colspan=3 style='height:30px;'><div class='butt'>СОСТАВ ФЛОТА</div></td></tr><tr>
-<td>ОГРОМНЫЕ<br>",$ships_huge,"</td><td>БОЛЬШИЕ<br>",$ships_big,"</td><td>СРЕДНИЕ<br>",$ships_small,"</td></tr>
-<tr><td colspan='3'>ИТОГО: ",$ships_all,"</td></tr></table>
-</div></div></div>";
-	echo "<div id='qvorum'><div class='titl'><img src='img/qvorum.png'></div><div class='titl2' nowrap><img src='img/project.png'><img src='img/init.png'><img src='img/supp.png'></div>
-<div id='cqvorum'>
-<div>
-<div><div>пайкон</div><div>каприка</div><div>выборы в государственные органы власти</div></div>
-<div><div>сагитарион</div><div>гименон</div><div>о признании сайлонов несовершеннолетними</div></div>
-<div><div>либран</div><div>офис президента</div><div>о реорганизации системы государственной власти</div></div>
-<div><div>пайкон</div><div>каприка</div><div>выборы в государственные органы власти</div></div>
-<div><div>сагитарион</div><div>гименон</div><div>о признании сайлонов несовершеннолетними</div></div>
-<div><div>либран</div><div>офис президента</div><div>о реорганизации системы государственной власти</div></div>
-</div>
-</div></div>";
-	echo "<div id='project'><div class='titl'><img src='img/projects.png'></div><div class='titl2'><img src='img/project.png'><img src='img/headl.png'><img src='img/progr.png'></div>
-<div id='cproject'>
-<div>
-<div><div>ХХХ</div><div>Анри-Рене-Альбер-Ги де Мопассан</div><div style='font-family:\"crystalregular\";font-size:20px;'>00:00:00</div></div>
-<div><div>сагитарион</div><div>гименон</div><div style='font-family:\"crystalregular\";font-size:20px;'>00:00:00</div></div>
-<div><div>либран</div><div>офис президента</div><div style='font-family:\"crystalregular\";font-size:20px;'>00:00:00</div></div>
-<div><div>пайкон</div><div>каприка</div><div style='font-family:\"crystalregular\";font-size:20px;'>00:00:00</div></div>
-<div><div>сагитарион</div><div>гименон</div><div style='font-family:\"crystalregular\";font-size:20px;'>00:00:00</div></div>
-<div><div>либран</div><div>офис президента</div><div style='font-family:\"crystalregular\";font-size:20px;'>00:00:00</div></div>
-</div>
+	echo "</div></div>";
+$d="<img src='img/greed.gif' style='width:2px;height:35px;'>";
+$widt1=round(abs(min(($fl_data['hope']-100),0))/2);
+$blwidt1=46-$widt1;
+$widt2=round(max(($fl_data['hope']-100),0)/2);
+$blwidt2=46-$widt2;
+$hope1="<img src='img/greed.gif' style='width:".$blwidt1."%;height:2px;'><img src='img/red.gif' style='width:".$widt1."%;height:25px;'>";
+$hope2="<img src='img/green.gif' style='width:".$widt2."%;height:25px;'><img src='img/greed.gif' style='width:".$blwidt2."%;height:2px;'>";
+$widt1=round(abs(min(($fl_data['vera']-100),0))/2);
+$blwidt1=46-$widt1;
+$widt2=round(max(($fl_data['vera']-100),0)/2);
+$blwidt2=46-$widt2;
+$vera1="<img src='img/greed.gif' style='width:".$blwidt1."%;height:2px;'><img src='img/red.gif' style='width:".$widt1."%;height:25px;'>";
+$vera2="<img src='img/green.gif' style='width:".$widt2."%;height:25px;'><img src='img/greed.gif' style='width:".$blwidt2."%;height:2px;'>";
+	echo "<div id='stat'><div id='statl'><div class='titl'><img src='",$imnastr,"'></div><div class='informer'>
+<table style='width:100%; height:100%;border-spacing: 0px;padding:0px;margin:auto;'><tr>
+<td style='width:50%;vertical-align:bottom;' nowrap colspan=2>",$vera1,$d,$vera2,"</td>
+<td style='width:50%;vertical-align:bottom;' nowrap colspan=2>",$hope1,$d,$hope2,"</td></tr>
+<tr><td nowrap style='padding:0;'><img src='img/info/0_fear.png' style='width:100%;height:auto;'></td><td style='padding:0;'><img src='img/info/0_fate.png' style='width:100%;height:auto;'></td><td nowrap style='padding:0;'><img src='img/info/0_disap.png' style='width:100%;height:auto;'></td><td style='padding:0;'><img src='img/info/0_hope.png' style='width:100%;height:auto;'></td></tr></table>
+</div></div><div id='statr'><div class='titl'><img src='",$imfleet,"'></div><div class='informer'>
+<table style='width:100%; height:100%;border-spacing: 0px;padding:0px;'><tr>
+<td>ОГРОМНЫЕ<br>",$ships_d[1],"</td><td>БОЛЬШИЕ<br>",$ships_d[2],"</td><td>СРЕДНИЕ<br>",$ships_d[3],"</td></tr>
+<tr><td colspan='3'>ИТОГО: ",$ships_all,"</td></tr></table></div></div></div>";
+	echo "<div id='qvorum'><div class='titl'><img src='",$imrealise,"'></div><div class='titl2' nowrap><table style='margin:0 auto;width:99%;height:100%;border-spacing:1px;'><tr>
+<td style='background-image:url(\"",$improj,"\");'>&nbsp;</td>
+<td style='background-image:url(\"",$iminit,"\");'>&nbsp;</td>
+<td style='background-image:url(\"",$imsup,"\");'>&nbsp;</td>
+<td style='background-image:url(\"",$imvla,"\");'>&nbsp;</td>
+<td style='background-image:url(\"",$imruk,"\");'>&nbsp;</td>
+<td id='clock' style='background-image:url(\"",$improg,"\");'></td></tr></table></div>
+<div id='cqvorum' class='slick-vertical'>
+<div><table class='qvorum'><tr><td>пайкон</td><td>каприка</td><td>ВНЕОЧЕРЕДНЫЕ выборы в государственные органы власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>САГИТАРИОН</td><td>гименон</td><td>о признании сайлонов несовершеннолетними</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>либран</td><td>ОФИС ПРЕЗИДЕНТА</td><td>о реорганизации системы государственной власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>пайкон</td><td>каприка</td><td>выборы в государственные органы власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>сагитарион</td><td>гименон</td><td>о признании сайлонов несовершеннолетними</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>либран</td><td>офис президента</td><td>о реорганизации системы государственной власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>пайкон</td><td>каприка</td><td>выборы в государственные органы власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>сагитарион</td><td>гименон</td><td>о признании сайлонов о признании сайлонов несовершеннолетними</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>либран</td><td>офис президента</td><td>о реорганизации системы государственной власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>пайкон</td><td>каприка</td><td>выборы в государственные органы власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>сагитарион</td><td>гименон</td><td>о признании сайлонов несовершеннолетними</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>о реорганизации ЗАКОННОЙ системы государственной</td><td>офис президента</td><td>о реорганизации системы государственной власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
 </div></div>";
 
-echo "</div></div></body></html>";
+echo "</div></div>
+<script type='text/javascript'>
+window.onload = function(){
+	window.setInterval(function(){
+		var now = new Date();
+		var clock = document.getElementById('clock');
+		clock.innerHTML = now.toLocaleTimeString();
+	}, 1000);
+};
+$(document).ready(function(){
+	$('.slick-vertical').bxSlider({
+		mode: 'vertical',
+		moveSlides: 1,
+		slideMargin: 10,
+		controls:false,
+		infiniteLoop: true,
+		pager:false,
+		autoHover:true,
+		minSlides: 2,
+		maxSlides: 3,
+		speed: 1000,
+                adaptiveHeight: true,
+		auto: true,
+	});
+});
+$(document).ready(function(){
+	$('.slider').bxSlider({
+		mode: 'vertical',
+		moveSlides: 1,
+		slideMargin: 10,
+		controls:false,
+		infiniteLoop: true,
+		pager:false,
+		autoHover:true,
+		minSlides: 2,
+		maxSlides: 3,
+		speed: 1000,
+                adaptiveHeight: true,
+		auto: true,
+	});
+});
+
+
+/*
+$(function(){
+      $('.slick-vertical').slick({
+		draggable:false,
+                vertical: true,
+		accessibility: false,
+                verticalSwiping: true,
+                slidesToShow: 2,
+                autoplay: true,
+		arrows: false,
+		adaptiveHeight:true,
+		autoplaySpeed:4000,
+		waitForAnimate:false,
+		touchMove:false,
+		swipe:false,
+      });
+});
+$(function(){
+	$('.vertical').slick({
+  draggable:false,
+  verticalSwiping: true,
+  slidesToShow: 2,
+  autoplay: true,
+  adaptiveHeight:true,
+  arrows: false,
+  dots: false,
+  focusOnSelect: true,
+  vertical: true
+	});
+}); */
+</script>
+</body></html>";
+} else {
+    header('Location: users/index.php'); 
 }
 ?>

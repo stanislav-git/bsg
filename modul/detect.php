@@ -20,16 +20,16 @@ GROUP BY destination.who");
 	if ($num_ship>0){
   		$jc=$num_ship;
   		foreach ($ship_data as $sd) {
-    			if ($sd['who1']<100){
+    			if ($sd['who1']<1000){
 				$cart["fleets"][$jc]["type"]=2;	
     			} else {
 				$cart["fleets"][$jc]["type"]=1;	
     			}
-    			if ($sd['who1']<100){
+    			if ($sd['who1']<1000){
 				$cart["fleets"][$jc]["fname"]=$sd['name1'];
 				$cart["fleets"][$jc]["cship"]=$sd['cfl'];
     			} else {
-				$cart["fleets"][$jc]["fname"]=ask_name($sd['who1'],$pdo);
+				$cart["fleets"][$jc]["fname"]=ask_name($sd['who1']);
 				$cart["fleets"][$jc]["cship"]=1;
     			}
     			$jc=$jc-1;

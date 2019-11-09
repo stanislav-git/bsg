@@ -1,0 +1,56 @@
+.titl img {
+ width:100%;
+ height:auto;
+}
+#resurs {
+ width:100%;
+ font-family:'AGLetter';
+ font-size:20px;
+}
+table{
+ width:100%;
+}
+th {
+word-break:break-word;
+}
+td {
+text-align:center;
+
+}
+td>img {
+ width:auto;
+ height:4%;
+}
+figure{
+ padding-left:20px;
+ padding-right:20px;
+}
+figcaption{
+ font-size:30px;
+ padding-top:10px;
+}
+nav {
+padding:10px 0px;
+}
+.green {
+width:35px;
+display:inline-block;
+}
+.sm {
+width:15px;
+padding:2px 3px;
+display:inline-block;
+}
+aside {justify-content:initial; font-size:18px;font-family:'AGLetter';}
+main {display:flex;flex-direction:column;flex:1 1 32%;justify-content:space-around;}
+#left {display:flex;flex-direction:column;flex:1 1 68%; font-size:18px;font-family:'AGLetter';}
+.content-wrap {width: 100%;margin-right: 5px;display:flex;flex-direction:row;flex:1 1 0;padding:5px;}
+#norms {display:flex;flex:1 1 0;flex-direction: column;}
+#proiz {display:flex;flex:1 1 0;flex-direction: column;}
+#balans {display:flex;flex:1 1 0;flex-direction: column;}
+#transfer {display:flex;flex:1 1 0;flex-direction: column;}
+@media (min-width:750px) {
+  .content-wrap {width: 50%;}
+  .main-content {max-width:1000px;}
+
+}    

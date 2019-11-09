@@ -16,6 +16,7 @@ if (isset($_COOKIE['sess']) or isset($_SESSION['user_id'])) {
 	if ($num_rows<>1) {
 		if (isset($_SESSION['user_id'])){
 			$_SESSION=array();
+			session_unset();
 			session_destroy();
 		}
  		setcookie('login', '', 1, "/");
@@ -77,12 +78,7 @@ $pre_jump=0;
 $jump=0;
 $fuel=0;
 $dest_pos=0;
-$stmt = $pdo->prepare("SELECT * FROM destination WHERE `who` = ?");
-if ($pos>100){
-	$ship_c=round(($pos/100-floor($pos/100))*100);
-} else {
-	$ship_c=$pos;
-}
+$stmt = $pdo->prepare("SELECT resurs.fuel as rfuel, destination.enemy as enemy, destination.who as who,`name`,`locat`,`jumping`,destination.timer as timir,`tim_pre`,`map_dest`,`pass`,`image`,`radimage`, destination.fuel as fuel FROM destination left join resurs on destination.who=resurs.id_f WHERE `who` = ?");
 $stmt->execute([$pos]);
 $dest_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $num_rows = count($dest_data);
@@ -90,9 +86,16 @@ $num_rows = count($dest_data);
 $cur_pos=$dest_data[0]['locat'];
 $jump=$dest_data[0]['jumping'];
 $pre_jump=$dest_data[0]['tim_pre'];
-$timer=$dest_data[0]['timer'];
+$timer=$dest_data[0]['timir'];
 $dest_pos=$dest_data[0]['map_dest'];
-$fuel=$dest_data[0]['fuel'];
+$enemy=$dest_data[0]['enemy'];
+if ($pos>1000){
+	$ship_c=round(($pos/1000-floor($pos/1000))*1000);
+	$fuel=$dest_data[0]['fuel'];
+} else {
+	$ship_c=$pos;
+	$fuel=$dest_data[0]['rfuel'];
+}
 $ffname=$dest_data[0]['name'];
 //} else {
 //не найдена запись с текущими данными
@@ -106,8 +109,8 @@ if (isset($_GET['map'])){
 $maps_cur = $pdo->prepare("SELECT * FROM maps WHERE id_map = ?");
 $maps_cur->execute([$cur_pos]);
 $m_cur=$maps_cur->fetchAll(PDO::FETCH_ASSOC);
-if ($pos<100) {
-//Определяем флот и корабли с поломками
+if ($pos<1000) {
+//Определяем флот и считаем топливо
 	$qfleet = $pdo->prepare("SELECT sum(typeship.jfuel) as fuel FROM ships join typeship on ships.type=typeship.id WHERE ships.`fleet` = ?");
   	$qfleet->execute([$pos]);
   	$fleet_data = $qfleet->fetch();
@@ -123,8 +126,8 @@ if ($pos<100) {
 } else {
         if ($selec_pos==0) {$selec_pos=$cur_pos;}
   	$fleet_data['fuel'] = count_fuel($cur_pos,$selec_pos);
-
-	if (strpos($ffname, "айлон") !== false) {
+//сайлоны  	
+	if ($enemy==1) {
 	   $fleet_data['fuel']=1;
 	}
 
@@ -135,8 +138,11 @@ left JOIN scanning ON anom.id=scanning.id_ano AND scanning.who=? WHERE maps.id_m
   	$rapt_data->execute(array($ship_c,$selec_pos));
   	$det_cur=$rapt_data->fetch();
   	if ($det_cur['mdet']==0) {
-    		$rap_jump=1;
+//неразведанный сектор
+//    		$rap_jump=1;
+    		$rap_jump=0;
   	} else {
+//разведанный сектор
     		$rap_jump=0;
   	}
 }
@@ -154,7 +160,7 @@ $head=$head.$m_cur[0]['name'].".jpg\"); background-size:100% 100%;'><div id='mak
 <div id='fleetdig' class='modal-content'>";
 //управление флотом
 
-$head1="</div></div><div id='left'><div id='panel1'><img src='img/fleet/".$dest_data[0]['image']."' style='width:100%;height:auto;'></div>";
+$head1="</div></div><div id='left'><div id='panel1'><a href='inform.php?fleet=".$ship_c."'><img src='img/fleet/".$dest_data[0]['image']."' style='width:100%;height:auto;'></a></div>";
 //echo session_id();
 if ($giper==0) {
 //неисправен гипердвигатель
@@ -223,7 +229,7 @@ print $head1;
 		echo "<div class='countdown-text'>
        			<span>&nbsp;</span>
 		      </div>";
-      		if ($pos<100) {
+      		if ($pos<1000) {
       		  	echo "<form id='jump' method='post' action='jobs/jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'><input type='hidden' name='dest' value='",$selec_pos,"'>";
                         echo "<a href=# onClick='document.getElementById(\"jump\").submit();return false;'>
         		<div class='dmessage' style='background-size:100% 100%; background-image:url(\"img/but-green-long-x.png\");'><span>ПРЫЖОК</span>
@@ -301,7 +307,7 @@ print $head1;
 		echo "<div class='countdown-text'>
        			<span>&nbsp;</span>
 		      </div>";
-      		if ($pos<100) {
+      		if ($pos<1000) {
       		  echo "<form id='jump' method='post' action='jobs/jump.php'><input type='hidden' name='prep' value='",$pos,"'><input type='hidden' name='dest' value='",$selec_pos,"'><input type='hidden' name='pre_jump' value='",$pre_jump,"'>";
       		  
       		  echo "<a href=# onClick='document.getElementById(\"jump\").submit();return false;'>
@@ -437,11 +443,9 @@ while ($row = $maps_data->fetch()) {
     <div style='padding-top:10px;'>
       <img src='img/<?php echo $cur_name;?>.png' style='width:100%;height:auto;text-align:center;'>
     </div>
-    <div id='fuel'>
-       <p>ТИЛИУМ</p>
-       <p><?php echo $fuel ?></p>
-    </div>
+    <div id='fuel'><p>ТИЛИУМ</p>
 <?php
+echo "<p>",$fuel,"</p><p>",$fleet_data['fuel'],"</p></div>";
 echo "<div id='smessage'>";
 if ($fuel>0) {
 	echo "<form id='scan1' method='post' action='jobs/scan.php'><a href='#' style='display:block; height:100%;' onClick='document.getElementById(\"scan1\").submit();return false;'>";
@@ -456,24 +460,25 @@ if ($selec_pos<>0){
 }
 $maps_cur->execute([$info_pos]);
 $scan_cur=$maps_cur->fetchAll(PDO::FETCH_ASSOC);
-$stm = $pdo->prepare("SELECT DISTINCT scanning.id_ano, scanning.level, anom.anomaly, anom.scanned, scanning.report
-FROM scanning, anom WHERE scanning.who=:who AND scanning.id_ano=anom.id AND anom.map=:id_map");
-$stm->bindValue(':id_map',$info_pos);
-$stm->bindValue(':who',$ship_c);
-$stm->execute();
+$stm = $pdo->prepare("SELECT DISTINCT scanning.id_ano, scanning.level, anom.anomaly, anom.scanned, scanning.report, anom.resurs
+FROM scanning, anom WHERE scanning.who=? AND scanning.id_ano=anom.id AND anom.map=?");
+$stm->execute(array($ship_c,$cur_pos));
 $anom_data = $stm->fetchAll(PDO::FETCH_ASSOC);
 $num_row=count($anom_data);
 $scanhere=0;
 foreach ($anom_data as $dd){
-  $scanhere=$scanhere+$dd['level'];
+  if ($dd['level']>0) {$scanhere=$scanhere+$dd['resurs'];}
 }
 unset($dd);
+$stm->execute(array($ship_c,$info_pos));
+$anom_data = $stm->fetchAll(PDO::FETCH_ASSOC);
+$num_row=count($anom_data);
 print "<div id='power' style='float:right;width:15%;text-align:right;'>
        <a href='logout.php?logout'><img src='img/power_green.png' style='width:100%;height:auto;'></a></div>";
-
-if ($scanhere>0 and $pos<100) {print "<a href='#' id='myBtn' style='display:block;'><div id='info'>";} else {print "<div id='info' class='off'>";}
-print "<img src='img/dig.gif' style='height:100%;width:auto;'></div>";
-if ($scanhere>0 and $pos<100) {print "</a>";}
+echo "<a href='manage_fleet.php?fleet=",$ship_c,"' style='display:block;'><div id='management'><img src='img/geer_gray.png' style='height:100%;width:auto;'></div></a>";
+if ($scanhere>0 and $pos<1000) {print "<a href='#' id='myBtn' style='display:block;'><div id='info'>";} else {print "<div id='info' class='off'>";}
+print "<img src='img/lopata.png'></div>";
+if ($scanhere>0 and $pos<1000) {print "</a>";}
 echo "<div id='radar'>
       <img id='im_rad' src='img/radar/",$dest_data[0]['radimage'],"' style='width:100%;height:auto;margin-bottom:0px;text-align:center;'></div>";
 echo "<div style='position:absolute; width:20px;height:20px;z-index:4;top:88px;left:43%;right:55%;'><img class='mark' id='mark1' style='display:none;' src='img/radar/mayk.gif'></div>";
@@ -588,16 +593,20 @@ function detect_ship() {
 }
 setInterval(detect_ship,25000);
 // Get the modal
-var modal = document.getElementById('myModal');
-var btn = document.getElementById("myBtn");
+<?php
+if ($scanhere>0 and $pos<1000) {
+echo "var modal = document.getElementById('myModal');
+var btn = document.getElementById('myBtn');
 btn.onclick = function() {
-	$("#myModal").fadeIn();	
+	$('#myModal').fadeIn();	
 }
 window.onclick = function(event) {
     if (event.target == modal) {
-        $("#myModal").fadeOut(300);
+        $('#myModal').fadeOut(250);
     }
+}";
 }
+?>
 </script>
 </body>
 </html>

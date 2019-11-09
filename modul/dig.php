@@ -1,23 +1,151 @@
 <?php
 include_once('connect.php');
+include_once('funct.php');
+$act=$_GET['act'];
+$fleet=$_GET['fleet'];
+$locat=$_GET['locat'];
+$resurs=$_GET['resurs'];
 
-$fleet=$_POST['fleet'];
-$locat=$_POST['locat'];
+if ($resurs==1) {$qres='typeship.dfuel DESC LIMIT 1';$qres1='typeship.dfuel ASC LIMIT 1';}
+if ($resurs==2) {$qres='typeship.dwater DESC LIMIT 1';$qres1='typeship.dwater ASC LIMIT 1';}
+if ($resurs==3) {$qres='typeship.dcomp DESC LIMIT 1';$qres1='typeship.dcomp ASC LIMIT 1';}
+//какие ресурсы можем копать
 $qresurs=$pdo->prepare("select anom.id,anom.resurs,anom.quality,scanning.who from anom JOIN scanning ON anom.id=scanning.id_ano WHERE anom.map=? AND scanning.who=? AND scanning.`level`>0");
 $qresurs->execute(array($locat,$fleet));
-$qships=$pdo->prepare("SELECT ships.id,typeship.dfuel,typeship.dwater, typeship.dcomp
-FROM ships JOIN typeship ON ships.`type`=typeship.id
-JOIN destination ON ships.fleet=destination.who
-WHERE destination.locat=? AND destination.who=? ORDER BY typeship.dfuel desc");
-$qships->execute(array($locat,$fleet));
-echo "<span class='close'>&times;</span>";
-while ($row = $qships->fetch()) {
 
+//кто может копать
+$qprepare="SELECT ships.id, typeship.dfuel as sfuel,typeship.dwater as swater, typeship.dcomp as scomp
+FROM ships JOIN typeship ON ships.`type`=typeship.id
+JOIN destination ON ships.fleet=destination.who LEFT JOIN dig ON ships.id=dig.ship
+WHERE dig.ship IS NULL AND  destination.locat=? AND destination.who=? AND ships.repair='0' ORDER BY ".$qres;
+$qships=$pdo->prepare($qprepare);
+$qships->execute(array($locat,$fleet));
+$idships=$qships->fetch();
+$idship=$idships['id'];
+$upd=0;
+while ($res_detect=$qresurs->fetch()){
+  if ($resurs==$res_detect['resurs'] and $idship<>'') {$id_ano=$res_detect['id'];$quality=$res_detect['quality'];$upd=1;}
 }
-echo '<script>
-var span = document.getElementsByClassName("close")[0];
-span.onclick = function() {
-    modal.style.display = "none";
+
+//отправляем копать
+if ($upd==1 and $act==1) {
+  $q_upd_dig=$pdo->prepare("INSERT INTO dig (ship,locat,id_ano,resurs,quality,timstart) VALUES (?,?,?,?,?,unix_timestamp(NOW()))");
+  $q_upd_dig->execute(array($idship,$locat,$id_ano,$resurs,$quality));
 }
-</script>';
+
+//снимаем с добычи
+if ($act==0) {
+  $qprepare="SELECT ships.id AS ids, ships.name AS name, typeship.cargo AS size, typeship.type AS class,
+(UNIX_TIMESTAMP(NOW())-dig.timstart)/900*typeship.dfuel*dig.quality*norms.p1*moral.hope/10000 AS res
+FROM ships
+JOIN typeship ON ships.`type`=typeship.id
+JOIN norms ON ships.fleet=norms.id_f
+JOIN moral ON ships.fleet=moral.id_f
+JOIN dig ON ships.id=dig.ship
+WHERE ships.fleet=? AND dig.resurs=? ORDER BY ".$qres1;
+  $qwho_del=$pdo->prepare($qprepare);
+  $qwho_del->execute(array($fleet,$resurs));
+  $delship=$qwho_del->fetch();
+  $idshipdel=$delship['ids'];
+  $resfinish=round($delship['res']);
+  $q_upd_dig=$pdo->prepare("DELETE FROM dig WHERE ship=? LIMIT 1");
+  $q_upd_dig->execute([$idshipdel]);
+  $text='Закончил добычу ресурсов '.$delship['name'].' ('.$delship['size'].' '.$delship['class'].')';
+  if ($resurs==1){
+	resurs_upd($fleet,$text,$resfinish,0,0);
+  }
+  if ($resurs==2){
+	resurs_upd($fleet,$text,0,$resfinish,0);
+  }
+  if ($resurs==3){
+	resurs_upd($fleet,$text,0,0,$resfinish);
+  }
+}
+//снимаем с добычи весь флот
+if ($act==2) {
+  $qprepare="SELECT sum((unix_timestamp(NOW())-dig.timstart)/900*typeship.dfuel*dig.quality*norms.p1*moral.hope/10000) AS res
+FROM ships JOIN typeship ON ships.`type`=typeship.id
+JOIN dig ON ships.id=dig.ship
+JOIN norms ON ships.fleet=norms.id_f
+JOIN moral ON ships.fleet=moral.id_f
+WHERE ships.fleet=? AND dig.resurs=? AND dig.locat=?";
+  $qwho_del=$pdo->prepare($qprepare);
+  $qwho_del->execute(array($fleet,$resurs,$locat));
+  $delship=$qwho_del->fetch();
+  $resfinish=round($delship['res']);
+  $q_upd_dig=$pdo->prepare("DELETE p FROM dig p WHERE p.ship IN (SELECT ships.id FROM ships WHERE ships.fleet=?) AND p.resurs=? AND p.locat=?");
+  $q_upd_dig->execute(array($fleet,$resurs,$locat));
+  $text='Флот '.ask_name($fleet).' закончил добычу ';
+  if ($resurs==1){
+	$text=$text.' тилиума, добыто:'.$resfinish.' единиц топлива';
+	resurs_upd($fleet,$text,$resfinish,0,0);
+  }
+  if ($resurs==2){
+	$text=$text.' воды, добыто:'.$resfinish.' единиц воды';
+	resurs_upd($fleet,$text,0,$resfinish,0);
+  }
+  if ($resurs==3){
+	$text=$text.' руды, добыто:'.$resfinish.' единиц руды';
+	resurs_upd($fleet,$text,0,0,$resfinish);
+  }
+}
+
+//кто копает 
+$q_who_dig=$pdo->prepare("SELECT ships.name as name from ships join dig on ships.id=dig.ship where ships.fleet=? and dig.resurs=?");
+$q_who_dig->execute(array($fleet,1));
+$who_fuel=$q_who_dig->fetchAll(PDO::FETCH_ASSOC);
+
+$q_who_dig=$pdo->prepare("SELECT ships.name as name from ships join dig on ships.id=dig.ship where ships.fleet=? and dig.resurs=?");
+$q_who_dig->execute(array($fleet,2));
+$who_water=$q_who_dig->fetchAll(PDO::FETCH_ASSOC);
+
+$q_who_dig=$pdo->prepare("SELECT ships.name as name from ships join dig on ships.id=dig.ship where ships.fleet=? and dig.resurs=?");
+$q_who_dig->execute(array($fleet,3));
+$who_comp=$q_who_dig->fetchAll(PDO::FETCH_ASSOC);
+
+//не заняты суммарно
+$q_dig_sum_ships=$pdo->prepare("SELECT sum(typeship.dfuel) as sfuel, sum(typeship.dwater) as swater, sum(typeship.dcomp) as scomp
+FROM ships JOIN typeship ON ships.`type`=typeship.id
+JOIN destination ON ships.fleet=destination.who LEFT JOIN dig ON ships.id=dig.ship
+WHERE dig.ship IS NULL AND  destination.locat=? AND destination.who=? and ships.repair='0'");
+$q_dig_sum_ships->execute(array($locat,$fleet));
+$dig_power=$q_dig_sum_ships->fetch();
+
+//заняты суммарно
+$q_summ_dig_fuel=$pdo->prepare("SELECT round(sum(typeship.dfuel)*dig.quality*norms.p1*moral.hope/10000) as sfuel
+FROM ships 
+JOIN typeship ON ships.`type`=typeship.id
+JOIN destination ON ships.fleet=destination.who 
+JOIN dig ON ships.id=dig.ship
+JOIN norms ON ships.fleet=norms.id_f
+JOIN moral ON ships.fleet=moral.id_f
+WHERE destination.locat=? AND destination.who=? AND dig.resurs=1 and ships.repair=0");
+$q_summ_dig_fuel->execute(array($locat,$fleet));
+$dfuel=$q_summ_dig_fuel->fetch();
+
+$q_summ_dig_water=$pdo->prepare("SELECT round(sum(typeship.dwater)*dig.quality*norms.p1*moral.hope/10000) as swater 
+FROM ships JOIN typeship ON ships.`type`=typeship.id
+JOIN destination ON ships.fleet=destination.who 
+JOIN dig ON ships.id=dig.ship
+JOIN norms ON ships.fleet=norms.id_f
+JOIN moral ON ships.fleet=moral.id_f
+WHERE destination.locat=? AND destination.who=? AND dig.resurs=2 and ships.repair=0");
+$q_summ_dig_water->execute(array($locat,$fleet));
+$dwater=$q_summ_dig_water->fetch();
+
+$q_summ_dig_comp=$pdo->prepare("SELECT round(sum(typeship.dcomp)*dig.quality*norms.p1*moral.hope/10000) as scomp
+FROM ships JOIN typeship ON ships.`type`=typeship.id
+JOIN destination ON ships.fleet=destination.who 
+JOIN dig ON ships.id=dig.ship
+JOIN norms ON ships.fleet=norms.id_f
+JOIN moral ON ships.fleet=moral.id_f
+WHERE destination.locat=? AND destination.who=? AND dig.resurs=3 and ships.repair=0");
+$q_summ_dig_comp->execute(array($locat,$fleet));
+$dcomp=$q_summ_dig_comp->fetch();
+
+$cart = array("name_ship_fuel" => $who_fuel,"name_ship_water"=>$who_water,"name_ship_comp"=>$who_comp,"res_fuel"=>$dig_power['sfuel'],"res_water"=>$dig_power['swater'],"res_comp"=>$dig_power['scomp'],"d_fuel"=>round($dfuel['sfuel']),"d_water"=>round($dwater['swater']),"d_comp"=>round($dcomp['scomp']));
+/*
+$cart=array("0"=>$adddel,"1"=>$fleet,"2"=>$locat,"3"=>$resurs);
+*/
+echo json_encode($cart);
 ?>

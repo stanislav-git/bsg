@@ -1,4 +1,42 @@
 <?php
+function dolj($my){
+	$dolj=array(
+	0=>'нет',
+	1000=>'Президент',
+	1001=>'Помощник Президента',
+	1002=>'Делегат Кворума',
+	1003=>'Специалист',
+	2000=>'Командир',
+	2001=>'Старший Помощник',
+	2002=>'Пилот',
+	2003=>'Военный',
+	3000=>'Представитель Совета',
+	4000=>'Представитель Мятежного Совета'
+	);
+	if (!isset($dolj[$my])){return 'нет';} else {return $dolj[$my];}
+}
+function complit($who){
+	global $pdo;
+	$search = trim($who);
+	$query = $pdo->prepare("SELECT users.id as id,users.id_f as id_f, destination.name as fleet,users.access as access, users.enemy as enemy,users.name as name, users.dolj as dolj FROM users join destination on users.id_f=destination.who WHERE users.name=?");
+	$query ->execute([$search]);
+	$row=$query->fetch();
+	$result_search = array('user' => $row['name'],'id' => $row['id'],'id_f'=>$row['id_f'],'fleet' => $row['fleet'],'access' => $row['access'],'enemy' => $row['enemy'],'dolj'=>$row['dolj']);
+	return $result_search;
+}
+function search_autocomplete($who){
+	global $pdo;
+	$search = trim($who);
+	$query = $pdo->prepare("SELECT name FROM users WHERE name LIKE ?");
+        $query->bindValue(1, "%$search%", PDO::PARAM_STR);
+	$query ->execute();
+	$result_search = array();
+	while($row = $query->fetch()){
+		$result_search[] = array('label' => $row['name']);
+	}
+	return $result_search;
+}
+
 function count_fuel($a1,$a2)
 {
   $row1=7;
@@ -25,21 +63,152 @@ function count_fuel($a1,$a2)
   return $ret;
 }
 
-function ask_name($a1,$pdo)
-{
-	$b1=round(($a1/100-floor($a1/100))*100);
-	$q_nam_fleet = $pdo->prepare("SELECT name FROM destination WHERE `who` = ?");
+function ask_name($a1){
+//переписать с учетом enemy
+	global $pdo;
+	$b1=round(($a1/1000-floor($a1/1000))*1000);
+	$q_nam_fleet = $pdo->prepare("SELECT name,enemy FROM destination WHERE `who` = ?");
 	$q_nam_fleet->execute([$b1]);
-	$nam_fleet=$q_nam_fleet->fetchColumn();
-	$ret=$nam_fleet;
-	if ($a1>100){
-		if (strpos($nam_fleet, "айлон") !== false) {
+	$nam_fleet=$q_nam_fleet->fetch();
+	$ret=$nam_fleet['name'];
+	if ($a1>1000){
+		if ($nam_fleet['enemy']==1) {
 		   $ret='Рейдер Сайлонов';
 		} else {
-		   $ret='Раптор '.$nam_fleet;
+		   $ret='Раптор '.$nam_fleet['name'];
 		}
 	}
 	return $ret;
+}
+function class_size($myship) {
+	global $pdo;
+	$qsize=$pdo->query("SELECT sizz,cargo from typeship group by sizz order by sizz");
+	$qsize->execute();
+	$size=$qsize->fetchAll(PDO::FETCH_ASSOC);
+	if ($myship['sizz']>=0) {
+                $mysizz=$myship['sizz'];
+		$qclass=$pdo->prepare("SELECT purp,type from typeship where sizz=? group by purp order by purp");
+		$qclass->execute([$mysizz]);
+		$class=$qclass->fetchAll(PDO::FETCH_ASSOC);
+	} else {
+		$qclass=$pdo->query("SELECT purp,type from typeship group by purp order by purp");
+		$qclass->execute();
+		$class=$qclass->fetchAll(PDO::FETCH_ASSOC);
+	}
+	echo " <select id='size' name='size' style='background-color:gray;color:#ffffff;'>";
+	foreach ($size as $sl){
+		echo "<option value='",$sl['sizz'],"'";
+		if ($myship['sizz']==$sl['sizz']) {echo " selected";}
+		echo ">",$sl['cargo'],"</option>";
+	}		
+	echo "</select>";
+	unset($sl);
+	echo " <select id='class' name='class'>";
+	foreach ($class as $cl){
+		echo "<option value='",$cl['purp'],"'";
+      		if ($myship['purp']==$cl['purp']) {echo " selected";}
+		echo ">",$cl['type'],"</option>";
+	}		
+        echo "</select>";
+        unset($cl);
+}
+function resurs($id) {
+	global $pdo;
+	$qresurs=$pdo->prepare("select fuel,water,comp from resurs where id_f=?");
+	$qresurs->execute([$id]);
+	$resurs=$qresurs->fetchAll(PDO::FETCH_ASSOC);
+        $ret = array("fuel"=>$resurs[0]['fuel'], "water"=>$resurs[0]['water'], "comp"=>$resurs[0]['comp']);
+	return $ret;
+}
+
+function resurs_upd($id_f,$text,$fuel,$water,$comp) {
+	global $pdo;
+//$pos,'Выполнен прыжок',-1*abs($fuel),0,0	
+	$q_upd_res=$pdo->prepare("SELECT resurs.fuel-sum(typeship.rfuel)*ROUND((UNIX_TIMESTAMP(NOW())-resurs.timer)/900) AS rfuel,
+resurs.water-sum(typeship.rwater)*ROUND((UNIX_TIMESTAMP(NOW())-resurs.timer)/900) - ROUND((UNIX_TIMESTAMP(NOW())-resurs.timer)*ships.human*0.2*norms.n2/100/900) AS rwater,
+resurs.comp-SUM(typeship.rcomp)*ROUND((UNIX_TIMESTAMP(NOW())-resurs.timer)/900) - ROUND((UNIX_TIMESTAMP(NOW())-resurs.timer)*ships.human*0.1*norms.n3/100/900) AS rcomp 
+FROM ships
+JOIN typeship ON ships.`type`=typeship.id
+JOIN resurs ON ships.fleet=resurs.id_f
+JOIN norms ON ships.fleet=norms.id_f
+WHERE ships.fleet=?");
+	$q_upd_res->execute([$id_f]);
+	$upd_res=$q_upd_res->fetch();
+	$r_fuel=$upd_res['rfuel']+$fuel;
+	$r_water=$upd_res['rwater']+$water;
+	$r_comp=$upd_res['rcomp']+$comp;
+	$upd_sh=$pdo->prepare("UPDATE resurs set fuel = ?, water = ?, comp=?, timer = UNIX_TIMESTAMP(NOW()) where id_f=?");
+	$upd_sh->execute(array($r_fuel,$r_water,$r_comp,$id_f));
+	$hist_res=$pdo->prepare("INSERT INTO hist_resurs (timer, id_f, fuel, water, comp, descr) VALUES (UNIX_TIMESTAMP(NOW()), ?, ?, ?, ?, ?)");
+	$hist_res->execute(array($id_f,$r_fuel,$r_water,$r_comp,trim($text)));
+}
+
+function lost_human($fleet,$num,$text) {
+	global $pdo;
+	$h_upd=$pdo->prepare("UPDATE ships set human=human-? where id=?");
+	$h_upd->execute(array($num,$fleet));
+	$q_count=$pdo->query("select sum(ships.human) from ships join destination on ships.fleet=destination.who where ships.fleet>0 and destination.enemy<>1");
+	$q_count->execute();
+	$coun_h=$q_count->fetchcolumn();
+	$q_human=$pdo->query("select human from hist_human where apr=1 order by tim DESC LIMIT 1");
+	$q_human->execute();
+	$human=$q_human->fetchcolumn();
+	$q_human=$pdo->prepare("insert into hist_human (human,tim,text) VALUES (?,unix_timestamp(NOW()),?)");
+	$q_human->execute(array($coun_h,$text));
+	if (floor(($human-$coun_h)/(2*$human/100))>=1){
+//падение морали
+		$mor=5*floor(($human-$coun_h)/(2*$human/100));
+		$q_mor=$pdo->prepare("select hope,vera from moral where id_f=?");
+		$q_mor->execute([$fleet]);
+		$hope=$q_mor->fetch();
+		$upd_mor=$pdo->prepare("insert into hist_moral (id_f,hope,vera,timstamp,text) VALUES (?,?,?,unix_timestamp(NOW()),?)");
+		$upd_mor->execute(array($fleet,$hope['hope'],$hope['vera'],$text));
+		$q_mor=$pdo->prepare("update moral set vera=?,hope=? where id_f=?");
+		$q_mor->execute(array($hope['vera'],$hope['hope']-$mor,$fleet));
+		$q_upd=$pdo->prepare("update hist_human set apr=1 where apr=0");
+		$q_upd->execute();	
+		$hews='По данным переписи населения, численность человечества уменьшилась до '.$coun_h.' '.get_rus($coun_h,array('человека','человек','человек'));
+		nnews('',0,$hews);
+	} else if (abs(floor(($human-$coun_h)/(2*$human/100)))>=1) {
+//если растет?
+		$mor=5*abs(floor(($human-$coun_h)/(2*$human/100)));
+		$q_mor=$pdo->prepare("select hope,vera from moral where id_f=?");
+		$q_mor->execute([$fleet]);
+		$hope=$q_mor->fetch();
+		$upd_mor=$pdo->prepare("insert into hist_moral (id_f,hope,vera,timstamp,text) VALUES (?,?,?,unix_timestamp(NOW()),?)");
+		$upd_mor->execute(array($fleet,$hope['hope'],$hope['vera'],$text));
+		$q_mor=$pdo->prepare("update moral set vera=?,hope=? where id_f=?");
+		$q_mor->execute(array($hope['vera'],$hope['hope']+$mor,$fleet));
+		$q_upd=$pdo->prepare("update hist_human set apr=1 where apr=0");
+		$q_upd->execute();	
+		$hews='По данным переписи населения, численность человечества увеличилась до '.$coun_h.' '.get_rus($coun_h,array('человека','человек','человек'));
+		nnews('',0,$hews);
+	}
+}
+
+function get_rus($fd, $forms) {
+    if (!is_int($fd)&&is_float($fd))//а уж число ли это?
+       return $forms[2];
+    elseif(is_int($fd))
+   {
+       $prc = abs($fd) % 100;
+       $prc_sec = $prc % 10;
+       if ($prc_add == 1)
+          return $forms[0];
+       if ($prc > 10 && $prc < 20)
+          return $forms[2];
+       if ($prc_add > 1 && $prc_add < 5)
+          return $forms[1];
+       return $forms[2];
+    };
+    return false;//нефик подсовывать ерунду
+}
+
+function nnews($autor,$fleet,$text) {
+	global $pdo;
+	if ($autor=='') {$autor='ВВС';}
+	$upd_news=$pdo->prepare("INSERT INTO news (fleet,autor,news,timnews) VALUES (?,?,?,unix_timestamp(NOW()))");
+	$upd_news->execute(array($fleet,$autor,$text));
 }
 
 ?>
