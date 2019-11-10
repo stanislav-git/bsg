@@ -9,8 +9,8 @@ if (isset($fleet)) {
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>ИНФОРМАЦИОННАЯ ПАНЕЛЬ</title>
-<link href="css/info.css" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="css/jquery.bxslider.css">
+<link href="css/info.css" rel="stylesheet" type="text/css">
 <script type="text/javascript" src="js/jquery11.min.js"></script>
 <script src="js/jquery.bxslider.js"></script>
 </head><body>';
@@ -80,7 +80,7 @@ GROUP BY typeship.sizz");
 
         mb_internal_encoding('UTF-8');
 	echo "<div id='head'>ФЛОТ: ",mb_strtoupper($fl_data['fname']),"</div>";
-	echo "<div id='news'><div class='titl'><img src='",$imnews,"'></div><div id='",$diz1,"' class='slider'>";
+	echo "<div id='news'><div class='titl'><img src='",$imnews,"'></div><div id='",$diz1,"' class='slider newss' style='top:0px;'>";
 	$qnews=$pdo->prepare("SELECT * from news where fleet=0 or fleet=? order by timnews LIMIT 10");
 	$qnews->execute([$fleet]);
 //	echo "<div><img src='img/power_red.png' alt='' / style='width:100%;'></div>";
@@ -149,24 +149,19 @@ $vera2="<img src='img/green.gif' style='width:".$widt2."%;height:25px;'><img src
 <td>ОГРОМНЫЕ<br>",$ships_d[1],"</td><td>БОЛЬШИЕ<br>",$ships_d[2],"</td><td>СРЕДНИЕ<br>",$ships_d[3],"</td></tr>
 <tr><td colspan='3'>ИТОГО: ",$ships_all,"</td></tr></table></div></div></div>";
 	echo "<div id='qvorum'><div class='titl'><img src='",$imrealise,"'></div><div class='titl2' nowrap><table style='margin:0 auto;width:99%;height:100%;border-spacing:1px;'><tr>
-<td style='background-image:url(\"",$improj,"\");'>&nbsp;</td>
-<td style='background-image:url(\"",$iminit,"\");'>&nbsp;</td>
-<td style='background-image:url(\"",$imsup,"\");'>&nbsp;</td>
-<td style='background-image:url(\"",$imvla,"\");'>&nbsp;</td>
-<td style='background-image:url(\"",$imruk,"\");'>&nbsp;</td>
-<td id='clock' style='background-image:url(\"",$improg,"\");'></td></tr></table></div>
+<td style='background-image:url(\"",$improj,"\");width:25%;'>&nbsp;</td>
+<td style='background-image:url(\"",$iminit,"\");width:15%;'>&nbsp;</td>
+<td style='background-image:url(\"",$imsup,"\");width:15%;'>&nbsp;</td>
+<td style='background-image:url(\"",$imvla,"\");width:15%;'>&nbsp;</td>
+<td style='background-image:url(\"",$imruk,"\");width:15%;'>&nbsp;</td>
+<td id='clock' style='background-image:url(\"",$improg,"\");width:15%;'></td></tr></table></div>
 <div id='cqvorum' class='slick-vertical'>
-<div><table class='qvorum'><tr><td>пайкон</td><td>каприка</td><td>ВНЕОЧЕРЕДНЫЕ выборы в государственные органы власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
-<div><table class='qvorum'><tr><td>САГИТАРИОН</td><td>гименон</td><td>о признании сайлонов несовершеннолетними</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
-<div><table class='qvorum'><tr><td>либран</td><td>ОФИС ПРЕЗИДЕНТА</td><td>о реорганизации системы государственной власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
-<div><table class='qvorum'><tr><td>пайкон</td><td>каприка</td><td>выборы в государственные органы власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
-<div><table class='qvorum'><tr><td>сагитарион</td><td>гименон</td><td>о признании сайлонов несовершеннолетними</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
-<div><table class='qvorum'><tr><td>либран</td><td>офис президента</td><td>о реорганизации системы государственной власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
-<div><table class='qvorum'><tr><td>пайкон</td><td>каприка</td><td>выборы в государственные органы власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
-<div><table class='qvorum'><tr><td>сагитарион</td><td>гименон</td><td>о признании сайлонов о признании сайлонов несовершеннолетними</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
-<div><table class='qvorum'><tr><td>либран</td><td>офис президента</td><td>о реорганизации системы государственной власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
-<div><table class='qvorum'><tr><td>пайкон</td><td>каприка</td><td>выборы в государственные органы власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
-<div><table class='qvorum'><tr><td>сагитарион</td><td>гименон</td><td>о признании сайлонов несовершеннолетними</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>ВНЕОЧЕРЕДНЫЕ выборы в государственные органы власти</td><td>пайкон</td><td>каприка</td><td>офис президента</td><td>Гай Балтар</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>о признании сайлонов несовершеннолетними, ущербными созданиями, нуждающимися в опеке и покровительстве и еще немного слов и еще немного слов</td><td>САГИТАРИОН</td><td>гименон</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>о реорганизации системы государственной власти</td><td>либран</td><td>ОФИС ПРЕЗИДЕНТА</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>выборы в государственные органы власти</td><td>пайкон</td><td>каприка</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>о признании сайлонов несовершеннолетними</td><td>сагитарион</td><td>гименон</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
+<div><table class='qvorum'><tr><td>о реорганизации системы государственной властио реорганизации системы государственной властио реорганизации системы государственной властио реорганизации системы государственной властио реорганизации системы государственной властио реорганизации системы государственной власти</td><td>либран</td><td>офис президента</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
 <div><table class='qvorum'><tr><td>о реорганизации ЗАКОННОЙ системы государственной</td><td>офис президента</td><td>о реорганизации системы государственной власти</td><td>ппп</td><td>ппп</td><td>00:00:00 </td></tr></table></div>
 </div></div>";
 
@@ -183,13 +178,14 @@ $(document).ready(function(){
 	$('.slick-vertical').bxSlider({
 		mode: 'vertical',
 		moveSlides: 1,
-		slideMargin: 10,
+		slideMargin: 5,
+		touchEnabled:false,
 		controls:false,
 		infiniteLoop: true,
 		pager:false,
 		autoHover:true,
-		minSlides: 2,
-		maxSlides: 3,
+		maxSlides: 15,
+		minSlides:2,
 		speed: 1000,
                 adaptiveHeight: true,
 		auto: true,
@@ -201,6 +197,7 @@ $(document).ready(function(){
 		moveSlides: 1,
 		slideMargin: 10,
 		controls:false,
+		touchEnabled:false,
 		infiniteLoop: true,
 		pager:false,
 		autoHover:true,
