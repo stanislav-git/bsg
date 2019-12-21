@@ -1,7 +1,125 @@
-.titl img {
- width:100%;
- height:auto;
+@font-face{ 
+	font-family: 'crystalregular';
+        src: url('../fons/crystal_regular-webfont.eot');
+        src: url('../fons/crystal_regular-webfont.eot?#iefix') format('embedded-opentype'),
+	     url('../fons/Crystal-Regular.woff') format('woff'),
+	     url('../fons/Crystal_Regular.ttf') format('truetype'),
+	     url('../fons/crystal_regular-webfont.svg#crystalregular') format('svg');
 }
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 10px;
+    border: 1px solid #888;
+    width: 70%;
+    text-align:center;
+    position:relative;
+}
+#cnews{
+  position:absolute;
+  left:0px;
+  right:0px;
+  top:37px;
+  bottom:5px;
+  overflow-y:auto; 
+  padding-left:15px;
+  padding-right:15px; 
+  direction:ltr;
+  font-family: 'AGLetter', Arial;
+  z-index:1;
+}
+.head {
+font-size:90%;
+font-style:italic;
+margin-left:10px;
+display:block;
+font-family: 'crystalregular';
+
+}
+.autor {
+font-style:italic;
+text-align:right;
+display:block;
+margin-right:8px;
+color:#a0f0f0;
+}
+#cnews_cyl p,
+#cnews p {
+  font-size:102%;
+  text-align:left;
+  margin: 15px 5px 10px 10px;
+}
+#info {
+  height:70%;
+  position:relative;
+}
+
+#fleets {
+   width:100%;
+   font-family: "crystalregular","Verdana","Arial";
+   font-size:26px;
+   padding-bottom:16px;
+}
+#dfuel {
+float:left;
+margin-left:0px;
+padding:5px;
+position:relative;
+height:90%;
+height:-moz-calc(100% - 47px);
+height:-webkit-calc(100% - 47px);
+height:calc(100% - 47px);
+}
+#dwater {
+float:left;
+margin-left:0%;
+padding:5px;
+position:relative;
+height:90%;
+height:-moz-calc(100% - 47px);
+height:-webkit-calc(100% - 47px);
+height:calc(100% - 47px);
+
+}
+#dcomp {
+float:right;
+padding:5px;
+position:relative;
+height:90%;
+height:-moz-calc(100% - 47px);
+height:-webkit-calc(100% - 47px);
+height:calc(100% - 47px);
+}
+.titl {
+height:44px;
+width:100%;
+text-align:center;
+}
+.titl img {
+height:auto;
+width:100%;
+}
+.but {
+font-size: 100%;
+font-family: 'AGLetter',Arial;
+}
+.cont {
+position:relative;
+width:100%;
+height:85%;
+height:-moz-calc(100% - 70px);
+height:-webkit-calc(100% - 70px);
+height:calc(100% - 70px);
+}
+.contt {
+  position:absolute;
+  overflow-y:auto;
+  left:0px;
+  top:0px;
+  right:0px;
+  bottom:0px;
+}
+/* fin */
 #resurs {
  width:100%;
  font-family:'AGLetter';

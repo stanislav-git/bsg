@@ -2,6 +2,7 @@
 include_once('../modul/connect.php');
 include_once('../modul/funct.php');
 if (isset($_GET['logout'])) {
+	setcookie('fleet','',time()-3600,'/');
 	setcookie('user','',time()-3600,'/');
 	setcookie('access','',time()-3600,'/');
 	setcookie('name','',time()-3600,'/');
@@ -76,7 +77,7 @@ echo '<div class="butt">ПРОСМОТРЕТЬ ОТЧЕТЫ</div>';
 echo '<div class="butt off">ПРОСМОТРЕТЬ ОТЧЕТЫ</div>';
 }
 if (isset($search)){
-echo '<div class="butt">УПРАВЛЕНИЕ ПРОЕКТАМИ</div>';
+echo '<a href="../project.php" style="display:block;margin-bottom:0px;"><div class="butt">УПРАВЛЕНИЕ ПРОЕКТАМИ</div></a>';
 } else {
 echo '<div class="butt off">УПРАВЛЕНИЕ ПРОЕКТАМИ</div>';
 }
@@ -85,13 +86,13 @@ echo '<a href="../manage_ships.php" style="display:block;margin-bottom:0px;"><di
 } else {
 echo '<div class="butt off">УПРАВЛЕНИЕ КОРАБЛЯМИ</div>';
 }
-if (isset($search)){if ((round($search['dolj']/1000)==$search['dolj']/1000) or (round(($search['dolj']-1)/1000)==($search['dolj']-1/1000))) {echo'<a href="../manage_fleet.php" stype="display:block;margin-bottom:0px;">
-<div class="butt">УПРАВЛЕНИЕ РЕСУРСАМИ</div></a>';}else {echo '<div class="butt off">УПРАВЛЕНИЕ РЕСУРСАМИ</div>';}} else {echo '<div class="butt off">УПРАВЛЕНИЕ РЕСУРСАМИ</div>';}
+if (isset($search)){if (($search['dolj']<>0) and ((round($search['dolj']/1000)==$search['dolj']/1000) or (round(($search['dolj']-1)/1000)==(($search['dolj']-1)/1000)))) {echo'<a href="../manage_fleet.php" stype="display:block;margin-bottom:0px;">
+<div class="butt">УПРАВЛЕНИЕ РЕСУРСАМИ</div></a>';} else {echo '<div class="butt off">УПРАВЛЕНИЕ РЕСУРСАМИ</div>';}} else {echo '<div class="butt off">УПРАВЛЕНИЕ РЕСУРСАМИ</div>';}
 if (isset($search['user'])){echo '<form method="post" id="info" action="../inform.php"><input type="hidden" name="fleet" value="',$search['id_f'],'"><a href="#" onclick="document.getElementById(\'info\').submit();return false;" style="display:block;margin-bottom:0px;"><div class="butt">ИНФОРМАЦИОННАЯ ПАНЕЛЬ</div></a></form>';} else {
 echo '<div class="butt off">ИНФОРМАЦИОННАЯ ПАНЕЛЬ</div>';
 }
 if (isset($search['user'])) {
-	if ($search['access']>0) {
+	if (($search['dolj']<>0) and ((round($search['dolj']/1000)==$search['dolj']/1000) or (round(($search['dolj']-1)/1000)==(($search['dolj']-1)/1000)))) {
 		echo '<a href="../index.php" style="display:block;margin-bottom:0px;"><div class="butt">ПАНЕЛЬ НАВИГАЦИИ</div>';
 	} elseif($search['dolj']==2002) {
 		echo '<a href="../testsess.php" style="display:block;margin-bottom:0px;"><div class="butt">ПАНЕЛЬ НАВИГАЦИИ</div>';
@@ -104,6 +105,9 @@ if (isset($search['user'])) {
 if (isset($search['user'])){echo '</a>';}
 echo '</div></div>
 </div></div>';
+//echo '<script>';
+//echo 'alert(',print_r($_COOKIE),');';
+//echo '</script>';
 if (!isset($search['user'])){
 echo '<script src="../js/jquery11.min.js"></script>';
 //echo '<script src="../js/bootstrap/js/bootstrap.min.js"></script>';

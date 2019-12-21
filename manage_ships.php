@@ -26,6 +26,7 @@ $head='<!DOCTYPE html>
 <div class="main-content">
 <a href="users/index.php"><div id="logoff"><img src="img/power_red.png"></div></a>
 <div class="content-wrap">
+<div id="counter" style="color:white;">1/46</div>
 <figure id="karusel">';
 echo $head;
 if (isset($_SESSION['user_id'])){$fleet=$_SESSION['user_id'];$access=1000;$my=0;}
@@ -38,9 +39,9 @@ LEFT JOIN users ON ships.user=users.id
 WHERE ships.id=?");
 $q_ship->execute([$fleet]);
 $cur_ship=$q_ship->fetch();
-echo "<a href=# style='display:block;' title='Листать вперед' onclick='list(",$fleet,",1,",$cur_ship['id'],");return false;'><div id='rarrow'></div></a>
-<img src='img/ships/",$cur_ship['image'],"'>
-<a href=# style='display:block;'><div id='larrow' title='Листать назад' onclick='list(",$fleet,"2,",$cur_ship['id'],");return false;'></div></a>
+echo "<a href=# style='display:block;' title='Листать вперед' onclick='list(",$fleet,",1,",$cur_ship['id'],");return false;'><div id='rarrow'></div></a>";
+echo "<img src='img/ships/",$cur_ship['image'],"'>
+<a href=# style='display:block;' title='Листать назад' onclick='list(",$fleet,",2,",$cur_ship['id'],");return false;'><div id='larrow'></div></a>
 </figure>";
 if ($my<>0){
 	$q_vlad=$pdo->prepare("SELECT distinct ships.id as id,users.name as u_name,ships.user as u_id, ships.fleet as fleet
@@ -133,6 +134,20 @@ echo "</select>
 <script>
 window.onload = function(){
   wship(",$fleet,",",$fleet,");
+  var select = document.getElementById('rul');
+  var options = select.getElementsByTagName('option');
+  for (var i=0; i<options.length; i++)  {
+    if (options[i].value==",$_COOKIE['user'],") {
+    $.ajax({
+         type: 'POST',
+         url: 'modul/viewship.php',
+         data: {my:",$my,",id_filt:options[i].value,fil:1,fl:",$fleet,"},
+         success: function(html){
+             $('#ship').html(html);	
+         }
+    });
+	}
+  }
 }
 var modal = document.getElementById('myModal');
 window.onclick = function(event) {
@@ -190,7 +205,7 @@ var selectedOption = selec.options[selec.selectedIndex];
     $.ajax({
          type: 'POST',
          url: 'modul/viewship.php',
-         data: {id_filt:selectedOption.value,fil:filt,fl:fleet},
+         data: {my:",$my,",id_filt:selectedOption.value,fil:filt,fl:fleet},
          success: function(html){
              $('#ship').html(html);	
          }
@@ -202,7 +217,7 @@ function wship(fleet,id){
         $.ajax({
             type: 'POST',
             url: 'modul/viewship.php',
-            data: {id:id},
+            data: {id:id,fleet:fleet},
             success: function(json) {
 		var obj=JSON.parse(json);
 		wiewship(obj);
@@ -238,6 +253,7 @@ function wiewship(obj){
 		document.getElementById('dfuel').innerHTML=obj.dfuel;
 		document.getElementById('dwater').innerHTML=obj.dwater;
 		document.getElementById('dcomp').innerHTML=obj.dcomp;
+		document.getElementById('counter').innerHTML=obj.counter;
 		document.getElementById('rfuel').innerHTML=obj.rfuel;
 		document.getElementById('rwater').innerHTML=obj.rwater;
 		document.getElementById('rcomp').innerHTML=obj.rcomp;
@@ -249,7 +265,7 @@ function wiewship(obj){
 		document.getElementById('unic').innerHTML=obj.unic;
 		document.getElementById('id_ship').value=obj.id_s;
 		document.getElementById('brake').value=obj.butt_z;
-		document.getElementById('project').innerHTML=obj.id_u;
+		document.getElementById('project').innerHTML=obj.proj_c;
 		document.getElementById('del').style.display='none';
 		document.getElementById('razob').style.display='none';
 		document.getElementById('peres').style.display='none';
@@ -259,14 +275,14 @@ function wiewship(obj){
 		document.getElementById('brake').style.display='none';
 		document.getElementById('ch_vlad').style.display='none';
 
-		if (Number.isInteger(",$access/1000,") && (obj.id_f==",$fleet,")){
+		if (Number.isInteger(",$access/1000,") && 0!=",$access," && (obj.id_f==",$fleet,")){
 			document.getElementById('arest').style.display='inline-block';
 			document.getElementById('del').style.display='inline-block';
 		}
 		if (Number.isInteger(",($access-1)/1000,") && (obj.id_f==",$fleet,")){
 			document.getElementById('arest').style.display='inline-block';
 		}
-		if (obj.id_u==",$my," && ",$my,"!=0){
+		if ((obj.id_u==",$my," && ",$my,"!=0) || (((Number.isInteger(",$access/1000,") && 0!=",$access,") || (Number.isInteger(",($access-1)/1000,"))) && (obj.id_f==",$fleet," && obj.id_f==obj.id_u))){
 /*id='del' id='razob' id='peres' id='ch_vlad' id='ch_fl' id='new_fl' id='brake' id='arest'*/
 		        if (obj.id_f==",$fleet,"){
 			document.getElementById('razob').style.display='inline-block';
@@ -276,6 +292,16 @@ function wiewship(obj){
 			document.getElementById('ch_fl').style.display='inline-block';
 			document.getElementById('new_fl').style.display='inline-block';
 			document.getElementById('brake').style.display='inline-block';
+		}
+		if (obj.id_f!=",$fleet," && obj.edit==0){
+			document.getElementById('del').style.display='none';
+			document.getElementById('razob').style.display='none';
+			document.getElementById('peres').style.display='none';
+			document.getElementById('ch_fl').style.display='none';
+			document.getElementById('arest').style.display='none';
+			document.getElementById('new_fl').style.display='none';
+			document.getElementById('brake').style.display='none';
+			document.getElementById('ch_vlad').style.display='none';
 		}
 	return false;
 }

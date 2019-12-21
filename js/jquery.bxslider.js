@@ -440,6 +440,7 @@
           newElWidth = Math.floor((wrapWidth + slider.settings.slideMargin) / (Math.ceil((wrapWidth + slider.settings.slideMargin) / (newElWidth + slider.settings.slideMargin))) - slider.settings.slideMargin);
         }
       }
+	newElWidth='100%';
       return newElWidth;
     };
 
@@ -1479,7 +1480,7 @@
       }
       if (slider.settings.ariaHidden) { applyAriaHiddenAttributes(slider.active.index * getMoveBy()); }
     };
-
+                                                                                                                                   `
     /**
      * Transitions to the next slide in the show
      */

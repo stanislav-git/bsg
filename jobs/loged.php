@@ -13,7 +13,25 @@ if (isset($_SESSION['user_id'])){
 			$q_exists=$pdo->prepare("select who as idn, name from destination where name=? and who<>? union select id as idn, name from ships where name=? and id<>?");
 			$q_exists->execute(array($name,$id,$name,$id));
 			$nums=$q_exists->rowcount();
-//надо проверить имя флота на совпадения с имеющимися и кораблями
+//надо проверить имя флота на совпадения с имеющимися и кораблями - ок
+			$check_name=$pdo->prepare("select name from destination where name=? and who<>?");
+			$check_name->execute(array($name,$id));
+			if ($check_name->rowCount()<>0 and $id<1000) {
+				$qname=$pdo->prepare("select name from ships where id=?");
+				$qname->execute($id);
+				$name=$qname->fetchColumn();
+			}
+			$check_name=$pdo->prepare("select name from ships where name=? and id<>?");
+			$check_name->execute(array($name,$id));
+			if ($check_name->rowCount()<>0) {
+				if ($id<1000){
+				$qname=$pdo->prepare("select name from ships where id=?");
+				$qname->execute($id);
+				$name=$qname->fetchColumn();
+				} else {$name='пилот '.$id;}
+			}
+
+
 			if ($id>1000) {
 				$loc=0;
 			} else {

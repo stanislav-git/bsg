@@ -10,8 +10,8 @@ if (isset($_SESSION['user_id'])){
 //		print_r($currus);
 		$news='В результате уничтожения флота '.ask_name($id).' было потеряно: (тилиума:'.$curres['fuel'].
 ', воды:'.$curres['water'].', запчастей:'.$curres['comp'].')';
-		$upd_news=$pdo->prepare("INSERT INTO news (fleet,autor,news,timnews) VALUES (?,'BBC',?,unix_timestamp(NOW()))");
-		$upd_news->execute(array($id,$news));
+		$upd_news=$pdo->prepare("INSERT INTO news (fleet,autor,news,timnews) VALUES (0,'BBC',?,unix_timestamp(NOW()))");
+		$upd_news->execute(array($news));
 //  		$fuel=trim($_POST['fuel']);
   		$sti = $pdo->prepare("DELETE FROM destination WHERE who= ?");
 	//удалить рапторы
@@ -34,6 +34,12 @@ if (isset($_SESSION['user_id'])){
   		$sti->execute([$id]);
   		$sti = $pdo->prepare("DELETE FROM hist_norms WHERE id_f= ?");
   		$sti->execute([$id]);
+  		$sti = $pdo->prepare("DELETE FROM hist_moral WHERE id_f= ?");
+  		$sti->execute([$id]);
+  		$sti = $pdo->prepare("DELETE FROM users WHERE id= ?");
+  		$sti->execute([$id]);
+  		$sti = $pdo->prepare("DELETE FROM project WHERE id_f= ?");
+  		$sti->execute([$id]);
   		if ($rr==1){
       			header('Location: ../admin.php?ships');
   		}
@@ -44,18 +50,15 @@ if (isset($_SESSION['user_id'])){
 //    			$passwod=md5(trim($_POST['pass']));
 //	  	}
   		$id=(int)trim($_POST['id']);
-	  	$name=trim($_POST['name']);
-//ПРОВЕРИТЬ КОРРЕКТНОСТЬ ИМЕНИ!
-
-
-
+//ПРОВЕРИТЬ КОРРЕКТНОСТЬ ИМЕНИ! - ok
 		if ($id<1000 and isset($_POST['fuel'])){
 			$resurs=resurs($id);
 //			print_r($resurs);
   			$fuel=$_POST['fuel'];
 			$water=$_POST['water'];
 			$comp=$_POST['comp'];
-			if ($_POST['ofuel']==$resurs['fuel'] and $_POST['owater']==$resurs['water'] and $_POST['ocomp']==$resurs['comp']) {
+//макс расход до 100
+			if (abs($_POST['ofuel']-$resurs['fuel'])<100 and abs($_POST['owater']-$resurs['water'])<100 and abs($_POST['ocomp']-$resurs['comp'])<100) {
 				$upd_res=$pdo->prepare("UPDATE resurs set fuel=?, water=?,comp=? WHERE id_f=?");
 				$upd_res->execute(array($fuel,$water,$comp,$id));
 			}
@@ -100,6 +103,11 @@ if (isset($_SESSION['user_id'])){
 	  	if (!file_exists($frimage)){
     			$rimage='radar-col.gif';
 	  	}
+		if ($id<1000) {
+		  	$name=control_name(trim($_POST['name']),$id);
+		} else {
+			$name=$_POST['name'];
+		}
 		$tim_pre=(int)trim($_POST['tim_pre']);
   		$updb = $pdo->prepare("UPDATE `destination` set `enemy`=:enemy,`name` = :name, `locat` = :locat, `map_dest` = :dest, `timer`= :timer, `tim_pre`=:tim_pre,`jumping`=:jumping, `image`= :image, `radimage`= :rimage where `who`=:id");
 		$updb->bindParam(':name', $name);

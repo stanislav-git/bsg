@@ -16,8 +16,8 @@ if (isset($_SESSION['user_id'])) {
       $dest=trim($_POST['dest']);
       $stq = $pdo->prepare("SELECT count(id_ano) FROM scanning WHERE id_ano= ? and who= ?");
       $stm = $pdo->prepare("SELECT id FROM anom WHERE map=:id_map");
-      $sti = $pdo->prepare("INSERT INTO scanning (`id_ano`, `who`,`level`) VALUES (?, ?, 1)");
-      $stu = $pdo->prepare("UPDATE scanning SET `level`=1 WHERE  id_ano= ? AND who= ? and `level`<>2");
+      $sti = $pdo->prepare("INSERT INTO scanning (`id_ano`, `who`,`level`,tim) VALUES (?, ?, 1, unix_timestamp(now()))");
+      $stu = $pdo->prepare("UPDATE scanning SET `level`=1, tim=unix_timestamp(now()) WHERE  id_ano= ? AND who= ? and `level`<>2");
       $stm->bindValue(':id_map',$dest);
       $stm->execute();
       $anom = $stm->fetchAll();
@@ -48,7 +48,7 @@ if (isset($_SESSION['user_id'])) {
          $coun = $stq->fetchColumn();
          if ($coun==0) {
            //insert
-           $sti = $pdo->prepare("INSERT INTO scanning (`id_ano`, `who`) VALUES (?, ?)");
+           $sti = $pdo->prepare("INSERT INTO scanning (`id_ano`, `who`,tim) VALUES (?, ?,unix_timestamp(now()))");
            $sti->execute(array($id_ano['id'],$who));
          }
       }

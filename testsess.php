@@ -29,13 +29,13 @@ if (isset($_POST['login'])){
 	        session_start();
 		$_SESSION['user_id']=$ask_user[0]['who'];
 		$sess=session_id();
-		$time = 86400;
+		$time = 7200;
 		setcookie('login', $login, time()+$time, "/");
 		setcookie('sess',$sess, time()+$ttlcookie, "/");
         	if ($ask_user[0]['tim']+$ttlsession<time() or $ask_user[0]['sid']==$sess) {
 			session_write_close();
 	//зашли
-			$time = 86400;
+			$time = 7200;
 			setcookie('login', $login, time()+$time, "/");
 			setcookie('sess',$sess, time()+$ttlcookie, "/");
 			$who=$ask_user[0]['who'];
@@ -105,7 +105,7 @@ if (isset($_POST['login'])){
 		}
         	if ($rap_tim+$ttlsession<time() or $rap_sid==$sess) {
 	//зашли
-			$time = 86400;
+			$time = 7200;
 			setcookie('login', $login, time()+$time, "/");
 			setcookie('sess',$sess, time()+$ttlcookie, "/");
                        	$updlo = $pdo->prepare("UPDATE destination set sid= ?, tim= ? where who= ?");
@@ -128,7 +128,7 @@ if (isset($_POST['login'])){
  				$_SESSION['user_id'] = '0';
 				$_SESSION['user_name'] = $login;
 				session_write_close();
- 				$time = 86400;
+ 				$time = 7200;
  				setcookie('login', $login, time()+$time, "/");
 				header('Location: admin.php');
 				exit;
@@ -147,9 +147,9 @@ if (isset($_POST['login'])){
 }
 if (!isset($_SESSION['user_id']) or !isset($_POST)) {
 	$foot="";
-	if (isset($_COOKIE['access'])){
-		if ($_COOKIE['access']>0) {$foot=$foot."<a href='users/index.php' style='text-decoration: none;'><div id='back' style='width:100%;color:white;font-size:14px;background-size: 100% 100%;font-family:Arial;padding:5px 0px;background-image:url(\"img/but-red-long-x.png\");'>В ЛИЧНЫЙ КАБИНЕТ</div></a>";}
-	}
+//	if (isset($_COOKIE['user'])){
+		$foot=$foot."<a href='users/index.php' style='text-decoration: none;'><div id='back' style='width:100%;color:white;font-size:14px;background-size: 100% 100%;font-family:Arial;padding:5px 0px;background-image:url(\"img/but-red-long-x.png\");'>В ЛИЧНЫЙ КАБИНЕТ</div></a>";
+//	}
 	$foot=$foot."</div><table>
 			<tr>
 				<td style='color:white;'>Логин:</td>

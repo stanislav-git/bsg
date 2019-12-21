@@ -34,7 +34,7 @@ destination.timer as timir,`tim_pre`,`map_dest`,`pass`,`image`,`radimage`, desti
       	}
 //снимаем с добычи
 	if ($pos<1000) {
-	$i=1;
+	$i=0;
 	while ($i++<4){
 		$qprepare="SELECT sum((unix_timestamp(NOW())-dig.timstart)/900*typeship.dfuel*dig.quality*norms.p1*moral.hope/10000) AS res
 FROM ships JOIN typeship ON ships.`type`=typeship.id
@@ -121,7 +121,7 @@ WHERE ships.fleet=? AND dig.resurs=? AND dig.locat=?";
 	      		$dest=$dest_pos;
       			$stq = $pdo->prepare("SELECT count(id_ano) FROM scanning WHERE id_ano= ? and who= ?");
       			$stm = $pdo->prepare("SELECT id FROM anom WHERE map= ?");
-	      		$sti = $pdo->prepare("INSERT INTO scanning (`id_ano`, `who`) VALUES (?, ?)");
+	      		$sti = $pdo->prepare("INSERT INTO scanning (`id_ano`, `who`,tim) VALUES (?, ?,unix_timestamp(now()))");
       			$stm->execute([$dest]);
       			$anom = $stm->fetchAll();
 	      		foreach ($anom as $id_ano) {

@@ -1,0 +1,73 @@
+#dships1,#dships2 {
+  width:50%;
+  text-align:left;
+  padding: 0px 3px;
+  font-family: 'AGLetter';
+  font-size: 14px;
+  line-height: 1.5em;
+}
+figure {
+  margin:0px;
+  text-align:center;
+  position:relative;
+}
+#larrow {
+position:absolute;
+top:0px;
+bottom:0px;
+left:0px;
+width:50%;
+}
+#rarrow {
+position:absolute;
+top:0px;
+bottom:0px;
+right:0px;
+width:50%;
+}
+figure>img{
+width:100%;
+height:auto;
+max-width:350px;
+}
+nav {
+padding:10px 0px;
+line-height:1.5em;
+}
+#logoff{
+position:absolute;
+right:15px;
+top:15px;
+width:50px;
+height:50px;
+z-index:1;
+}
+#logoff>img {
+width:100%;
+height:auto;
+}
+.main-content{
+position:relative;
+}
+.oran {
+   background-color: #b1682f;
+   background: -webkit-gradient(linear, left top, left bottom, from(#b1682f), to(#91501e));
+   background: -webkit-linear-gradient(top, #b1682f, #91601e);
+   background: -moz-linear-gradient(top, #b1682f, #91601e);
+   background: -ms-linear-gradient(top, #b1682f, #91601e);
+   background: -o-linear-gradient(top, #b1682f, #91601e);
+   background: linear-gradient(top, #b1682f, #91601e);
+   border: 1px solid #915011;
+   border-bottom: 1px solid #996b2b;
+   box-shadow: inset 0 1px 0 0 #d56f74;
+   -webkit-box-shadow: 0 1px 0 0 #d56f74 inset ;
+   -moz-box-shadow: 0 1px 0 0 #d56f74 inset;
+   -ms-box-shadow: 0 1px 0 0 #d56f74 inset;
+   -o-box-shadow: 0 1px 0 0 #d56f74 inset;
+   text-shadow: 0 -1px 0 #675915;
+}
+nav select{
+font-size: 15px;
+font-weight: 400;
+font-family: 'BebasRegular';
+}

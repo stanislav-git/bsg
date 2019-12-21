@@ -35,10 +35,46 @@ if (isset($_SESSION['user_id'])){
 <a href='admin.php?inform'><p>Инфо панель флота</p></a>
 </div>
 <div id='cont'>";
-//
+//новости и события
 if (isset($_GET['news'])){
-
-
+echo "<div id='myModal' class='modal'><div id='mnews' class='modal-content' style=''>";
+echo "</div></div>";
+$q_news=$pdo->query("select * from news order by fleet ASC,timnews DESC");
+$q_news->execute();
+	echo "<h2>Новости и события</h2>";
+	echo "<h3><a href=# onclick='btn3(); return false;'>Добавить новость</h3></p>";
+	echo "<table style='margin-left:30px;'>";
+	$flnews=0;
+	echo "<tr><td colspan=3><h3>Общий канал</h3></td></tr>";
+while ($news=$q_news->fetch()){
+	if ($news['fleet']<>$flnews){
+		if (ask_name($news['fleet'])=='' and $news['fleet']<>999) {$nam_fl='Флот потерян';} elseif ($news['fleet']==999){$nam_fl='Клуб';} else {$nam_fl=ask_name($news['fleet']);}
+	echo "<tr><td colspan=3><h3>",$nam_fl,"</h3></td></tr>";
+	$flnews=$news['fleet'];
+	}
+	echo "<tr><td><a href=# onclick='btn2(",$news['timnews'],",",$news['fleet'],"); return false;'>",date("d.m.Y H:i:s",$news['timnews']),"</a></td><td><a href=# onclick='btn2(",$news['timnews'],",",$news['fleet'],"); return false;'>",$news['autor'],"</a></td><td><a href=# onclick='btn2(",$news['timnews'],",",$news['fleet'],"); return false;'>",mb_substr($news['news'],0,200),"</a></td></tr>";
+}
+echo "</table>";
+}
+//Проекты
+if (isset($_GET['project'])){
+echo "<div id='myModal' class='modal'><div id='projdet' class='modal-content' style=''>";
+echo "</div></div>";
+$q_proj=$pdo->query("select id, nazv, flag, fuel, water, comp, id_f,descrip from project order by id_f,flag,type,nazv");
+$q_proj->execute();
+	echo "<h2>Проекты</h2>";
+	echo "<table style='margin-left:30px;'>";
+	$fleet=0;
+	while ($proj_data=$q_proj->fetch()){
+		if ($fleet<>$proj_data['id_f']) {if ($proj_data['id_f']==999){echo "<tr><td colspan=5><hr><h3>Клуб</h3></td></tr>";$fleet=999;} else {echo "<tr><td colspan=5><h3>",ask_name($proj_data['id_f']),"</h3></td></tr>";$fleet=$proj_data['id_f'];}}
+		echo "<tr";
+		if ($proj_data['flag']==1){ echo " style='background-color:yellow';";}
+		echo "><form action='jobs/project.php' method='post'><td><input type='hidden' name='idp' value='",$proj_data['id'],"'>",$proj_data['nazv'],"</td>";
+		echo "<td>",mb_strcut($proj_data['descrip'],0,100),"</td><td>",status($proj_data['flag']),"</td>";
+		echo "<td><input type='button' name='edit' value='ПРОСМОТР' id='myBtn1' onclick='btn1(",$proj_data['id'],"); return false;'></td><td><input type='submit' name='del' value='УДАЛИТЬ'></td>";
+		echo "</form></tr>";		
+	}
+	echo "</table>";
 }
 //Типы кораблей
 if (isset($_GET['typeship'])){
@@ -95,6 +131,7 @@ if (isset($_GET['person'])){
 	1001=>'Помощник Президента',
 	1002=>'Делегат Кворума',
 	1003=>'Специалист',
+	1004=>'Законодательная власть',
 	2000=>'Командир',
 	2001=>'Старший Помощник',
 	2002=>'Пилот',
@@ -104,7 +141,14 @@ if (isset($_GET['person'])){
 	);
 	$q_fleet=$pdo->query("select who,name,enemy from destination where who<1000 order by name");
 	$q_fleet->execute();
-	$q_person=$pdo->query("select id,name,dolj,access,enemy,id_f from users order by enemy,name");
+	$order=' enemy,name';
+	if (isset($_GET['sort'])){
+		if ($_GET['sort']=='name'){$order=' enemy, name';}
+		if ($_GET['sort']=='fleet'){$order=' id_f, name';}
+		if ($_GET['sort']=='dolj'){$order=' dolj, name';}
+	}
+	$quer='select id,name,dolj,access,enemy,id_f,live from users order by'.$order;
+	$q_person=$pdo->query($quer);
 	$q_person->execute();
 	echo "<h2>Игроки и доступы</h2>";
 	echo "<table style='margin-left:50px;width:50%;'><tr><th colspan=5>Новый персонаж</th></tr>";
@@ -124,9 +168,11 @@ if (isset($_GET['person'])){
 	unset($key);
 	unset($dol);
 	echo "<td><input type='checkbox' value='1' name='sylon'></td><td align='right'><input type='submit' name='addusers' value='Добавить'></td></form></tr></table>";
-	echo "<hr><table style='margin-left:50px;width:50%;'><tr><th>Имя</th><th>Флот</th><th>Должность</th><th colspan=2 align='left'>Сайлон</th></tr>";
+	echo "<hr><table style='margin-left:50px;width:50%;'><tr><th><a href='admin.php?sort=name&person'>Имя</a></th><th><a href='admin.php?sort=fleet&person'>Флот</a></th><th><a href='admin.php?sort=dolj&person'>Должность</a></th><th colspan=2 align='left'>Сайлон</th></tr>";
 	while ($person=$q_person->fetch()) {
-		echo "<tr><form action='jobs/users.php' method='post'><td><input type='hidden' name='id' value='",$person['id'],"'><input type='text' name='user' value='",$person['name'],"'></td>";
+		echo "<tr";
+		if ($person['live']==0) {echo " style='background-color:red;'";}
+		echo "><form action='jobs/users.php' method='post'><td><input type='hidden' name='id' value='",$person['id'],"'><input type='text' name='user' value='",$person['name'],"'></td>";
 		echo "<td><select name='id_f'><option value='0'>Не назначен</option>";
 		$q_fleet->execute();
 		while ($fleet=$q_fleet->fetch()){
@@ -144,7 +190,10 @@ if (isset($_GET['person'])){
 		echo "</select></td>";
 		echo "<td><input type='checkbox' value='1' name='sylon'";
 		if ($person['enemy']==1){echo " checked";}
-		echo "></td><td align='right'><input type='submit' name='editusers' value='Сохранить'></td></form></tr>";
+		echo "></td><td align='right' nowrap><input type='submit' name='editusers' value='Сохранить'> ";
+		if ($person['live']==1) {echo "<input type='submit' name='killuser' value='Убит'>";}
+		if ($person['live']==0) {echo "<input type='submit' name='liveuser' value='Жив'>";}
+		echo "</td></form></tr>";
 	}
 	echo "</table>";		
 }
@@ -303,8 +352,8 @@ echo "<div style='float:left;width:100%; margin-top:10px;'>";
 		$norms=$qnorms->fetch();
     		echo "<table cellpadding=2><tr><td style='font-size:20px;'><b>",$row['fname'],"</b></td><td></td><td>Запас</td><td>Добыча</td><td>Расход</td><td></td><td></td></tr>
 <tr><td></td><td><b>Тилиум:</b></td><td>",$row['fuel'],"</td><td>",$row['dfuel'],"</td><td>",$row['rfuel'],"</td><td>",$row['jfuel'],"</td><td>- на прыжок</td></tr>";
-		echo "<tr><td></td><td><b>Вода:</b></td><td>",$row['water'],"</td><td>",$row['dwater'],"</td><td>",$row['rwater'],"</td><td>",round($row['human']*0.2*$norms['n2']/100),"</td><td>- населением</td></tr>
-<tr><td></td><td><b>Запчасти:</b></td><td>",$row['comp'],"</td><td>",$row['dcomp'],"</td><td>",$row['rcomp'],"</td><td>",round($row['human']*0.1*$norms['n3']/100),"</td><td>- населением</td></tr></table>
+		echo "<tr><td></td><td><b>Вода:</b></td><td>",$row['water'],"</td><td>",$row['dwater'],"</td><td>",$row['rwater'],"</td><td>",round($row['human']*0.12*$norms['n2']/100),"</td><td>- населением</td></tr>
+<tr><td></td><td><b>Запчасти:</b></td><td>",$row['comp'],"</td><td>",$row['dcomp'],"</td><td>",$row['rcomp'],"</td><td>",round($row['human']*0.07*$norms['n3']/100),"</td><td>- населением</td></tr></table>
 <div style='border:1px solid green; margin-left:30px;'>";
     		$fleet_id=$row['fleet'];
     		$ship_data->execute(array($fleet_id,$fleet_id,$fleet_id));
@@ -379,7 +428,7 @@ FROM destination join resurs on destination.who=resurs.id_f WHERE destination.wh
     $maxt=time()+3540;
     echo "<td><input type='number' style='width: 5em;' min='10' max='10000' name='tim_pre' value='",$row['tim_pre'],"'></td>";
     echo "<td><input type='number' style='width: 5em;' min='10' max='10000' name='timer' value='",$row['timer'],"'></td>";
-    echo "<td><input type='number' style='width: 8em;' min='0' max='",$maxt,"' name='jumptim' value='";
+    echo "<td><input type='number' style='width: 6em;' min='0' max='",$maxt,"' name='jumptim' value='";
     if (time()>$row['jumping']) {echo "0";} else {echo $row['jumping'];}
     echo "'></td>";
     echo "<td><select name='radar'>";
@@ -443,13 +492,13 @@ if (isset($_GET['rapt'])){
     echo "<td><input type='checkbox' name='enemy' value='1'";
 	if ($row['enemy']==1) {echo " checked";}
 	echo "></td>";
-    echo "<td><input type='number' size='3' min='0' max='42' name='fuel' value='",$row['fuel'],"'></td>";
-    echo "<td><input type='number' size='3' min='0' max='42' name='loc' value='",$row['locat'],"'></td>";
-    echo "<td><input type='number' size='3' min='0' max='42' name='dest' value='",$row['map_dest'],"'></td>";
+    echo "<td><input style='width:3em;' type='number' size='3' min='0' max='42' name='fuel' value='",$row['fuel'],"'></td>";
+    echo "<td><input style='width:3em;' type='number' size='3' min='0' max='42' name='loc' value='",$row['locat'],"'></td>";
+    echo "<td><input style='width:4em;' type='number' size='3' min='0' max='42' name='dest' value='",$row['map_dest'],"'></td>";
     $maxt=time()+3540;
-    echo "<td><input type='number' size='5' min='5' max='10000' name='tim_pre' value='",$row['tim_pre'],"'></td>";
-    echo "<td><input type='number' size='5' min='10' max='10000' name='timer' value='",$row['timer'],"'></td>";
-    echo "<td><input type='number' size='11' min='0' max='",$maxt,"' name='jumptim' value='";
+    echo "<td><input type='number' style='width:5em;' size='5' min='5' max='10000' name='tim_pre' value='",$row['tim_pre'],"'></td>";
+    echo "<td><input type='number' style='width:5em;' size='5' min='10' max='10000' name='timer' value='",$row['timer'],"'></td>";
+    echo "<td><input type='number' style='width:6em;' size='11' min='0' max='",$maxt,"' name='jumptim' value='";
     if (time()>$row['jumping']) {echo "0";} else {echo $row['jumping'];}
     echo "'></td>";
     echo "<td><select name='radar'>";
@@ -570,6 +619,44 @@ window.onclick = function(event) {
         modal.style.display = 'none';
     }
 }
+function btn2(news,fleet) {
+    modal.style.display = 'block';
+    $.ajax({
+         type: "POST",
+         url: "modul/news.php",
+         data: {tim:news,fleet:fleet},
+         success: function(html){
+             $("#mnews").html(html);
+         }
+    });
+    return false;
+}
+function btn3() {
+    modal.style.display = 'block';
+    $.ajax({
+         type: "POST",
+         url: "modul/news.php",
+         data: {nw:1,tim:0,fleet:0},
+         success: function(html){
+             $("#mnews").html(html);
+         }
+    });
+    return false;
+}
+
+function btn1(proj) {
+    modal.style.display = 'block';
+    $.ajax({
+         type: "POST",
+         url: "modul/viewproj.php",
+         data: {ship:proj},
+         success: function(html){
+             $("#projdet").html(html);
+         }
+    });
+    return false;
+}
+
 function btn(fleet) {
     modal.style.display = 'block';
     $.ajax({

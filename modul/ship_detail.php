@@ -12,15 +12,17 @@ if (isset($_POST['ship'])) {
 	$num_sh=$q_num_sh->fetchColumn();	
 	echo "<form method='post' action='jobs/ships.php'><input type='hidden' name='ids' value='",$ship['ids'],"'>";
 	echo "<h3>",$ship['name'],"</h3><h4>",$ship['type']," ",$ship['cargo'];
-	echo "</h4><table><tr>";	
+	echo "</h4><table style='width:100%;'><tr>";	
 
-	$q_user=$pdo->query("SELECT id, name from users order by name ASC");
+	$q_user=$pdo->query("SELECT id, name, live from users order by name ASC");
 	$q_user->execute();
 	echo "<td nowrap>Владелец:<select name='user'><option value='0'>нет хозяина</option>";
 	while ($user=$q_user->fetch()){
 		echo "<option value='",$user['id'],"'";
 		if ($user['id']==$ship['user']){echo " selected";}
-		echo ">",$user['name'],"</option>";
+		echo ">",$user['name'];
+		if ($user['live']==0) {echo " (мертв)";}
+		echo "</option>";
 	}
 	echo "</select></td>";
 
@@ -45,8 +47,8 @@ if (isset($_POST['ship'])) {
 	}
         echo "</select></td>";
 	echo "</tr><tr><td>Уникальные компоненты</td><td>Особенности</td><td></td></tr><tr>";
-	echo "<td><textarea cols=35 rows=5 name='descparts'>",$ship['descparts'],"</textarea></td>";
-	echo "<td><textarea cols=35 rows=5 name='spec'>",$ship['spec'],"</textarea></td>";
+	echo "<td><textarea rows=5 style='width:90%;' name='descparts'>",$ship['descparts'],"</textarea></td>";
+	echo "<td><textarea rows=5 style='width:100%;' name='spec'>",$ship['spec'],"</textarea></td>";
 	echo "<td></td></tr></table><p style='width:100%;line-height:40px;'>";
 	echo "<input type='submit' name='fleet_d' value='В отдельный флот'";
 	if ($ship['fleet']==0 or $num_sh==1) {echo " disabled='disabled' style='display:none;'";}

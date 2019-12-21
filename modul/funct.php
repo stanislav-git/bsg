@@ -6,6 +6,7 @@ function dolj($my){
 	1001=>'Помощник Президента',
 	1002=>'Делегат Кворума',
 	1003=>'Специалист',
+	1004=>'Законодательная власть',
 	2000=>'Командир',
 	2001=>'Старший Помощник',
 	2002=>'Пилот',
@@ -18,7 +19,9 @@ function dolj($my){
 function complit($who){
 	global $pdo;
 	$search = trim($who);
-	$query = $pdo->prepare("SELECT users.id as id,users.id_f as id_f, destination.name as fleet,users.access as access, users.enemy as enemy,users.name as name, users.dolj as dolj FROM users join destination on users.id_f=destination.who WHERE users.name=?");
+	$query = $pdo->prepare("SELECT users.id as id,users.id_f as id_f, destination.name as fleet,
+users.access as access, users.enemy as enemy,users.name as name, users.dolj as dolj 
+FROM users join destination on users.id_f=destination.who WHERE users.live=1 and users.name=?");
 	$query ->execute([$search]);
 	$row=$query->fetch();
 	$result_search = array('user' => $row['name'],'id' => $row['id'],'id_f'=>$row['id_f'],'fleet' => $row['fleet'],'access' => $row['access'],'enemy' => $row['enemy'],'dolj'=>$row['dolj']);
@@ -27,7 +30,7 @@ function complit($who){
 function search_autocomplete($who){
 	global $pdo;
 	$search = trim($who);
-	$query = $pdo->prepare("SELECT name FROM users WHERE name LIKE ?");
+	$query = $pdo->prepare("SELECT name FROM users WHERE live=1 and name LIKE ?");
         $query->bindValue(1, "%$search%", PDO::PARAM_STR);
 	$query ->execute();
 	$result_search = array();
@@ -67,6 +70,7 @@ function ask_name($a1){
 //переписать с учетом enemy
 	global $pdo;
 	$b1=round(($a1/1000-floor($a1/1000))*1000);
+	if ($b1<>0) {
 	$q_nam_fleet = $pdo->prepare("SELECT name,enemy FROM destination WHERE `who` = ?");
 	$q_nam_fleet->execute([$b1]);
 	$nam_fleet=$q_nam_fleet->fetch();
@@ -78,6 +82,7 @@ function ask_name($a1){
 		   $ret='Раптор '.$nam_fleet['name'];
 		}
 	}
+	} else {$ret='Общий';}
 	return $ret;
 }
 function class_size($myship) {
@@ -123,13 +128,30 @@ function resurs($id) {
 
 function resurs_upd($id_f,$text,$fuel,$water,$comp) {
 	global $pdo;
-//$pos,'Выполнен прыжок',-1*abs($fuel),0,0	
-	$q_upd_res=$pdo->prepare("SELECT resurs.fuel-sum(typeship.rfuel)*ROUND((UNIX_TIMESTAMP(NOW())-resurs.timer)/900) AS rfuel,
-resurs.water-sum(typeship.rwater)*ROUND((UNIX_TIMESTAMP(NOW())-resurs.timer)/900) - ROUND((UNIX_TIMESTAMP(NOW())-resurs.timer)*ships.human*0.2*norms.n2/100/900) AS rwater,
-resurs.comp-SUM(typeship.rcomp)*ROUND((UNIX_TIMESTAMP(NOW())-resurs.timer)/900) - ROUND((UNIX_TIMESTAMP(NOW())-resurs.timer)*ships.human*0.1*norms.n3/100/900) AS rcomp 
+$q_res=$pdo->prepare("SELECT resurs.fuel AS rfuel, resurs.water AS rwater, resurs.comp AS rcomp, resurs.timer as tim
+FROM resurs WHERE resurs.id_f=?");
+$q_res->execute([$id_f]);
+$oldd_res=$q_res->fetch();
+
+$qrash=$pdo->prepare("SELECT round(sum(typeship.rfuel)*((UNIX_TIMESTAMP(NOW())-resurs.timer)/900)) AS rfuel,
+round(((UNIX_TIMESTAMP(NOW())-resurs.timer)/900)*(SUM(typeship.rwater)+SUM(ships.human)*0.12*norms.n2/moral.vera)) AS rwater,
+round(((UNIX_TIMESTAMP(NOW())-resurs.timer)/900)*(SUM(typeship.rcomp)+SUM(ships.human)*0.07*norms.n3/moral.vera)) AS rcomp 
 FROM ships
 JOIN typeship ON ships.`type`=typeship.id
 JOIN resurs ON ships.fleet=resurs.id_f
+JOIN moral ON ships.fleet=moral.id_f
+JOIN norms ON ships.fleet=norms.id_f
+WHERE ships.fleet=?");
+$qrash->execute([$id_f]);
+$rash=$qrash->fetch();
+
+$q_upd_res=$pdo->prepare("SELECT round(resurs.fuel-sum(typeship.rfuel)*((UNIX_TIMESTAMP(NOW())-resurs.timer)/900)) AS rfuel,
+round(resurs.water-(((UNIX_TIMESTAMP(NOW())-resurs.timer)/900)*(SUM(typeship.rwater)+SUM(ships.human)*0.12*norms.n2/moral.vera))) AS rwater,
+round(resurs.comp-(((UNIX_TIMESTAMP(NOW())-resurs.timer)/900)*(SUM(typeship.rcomp)+SUM(ships.human)*0.07*norms.n3/moral.vera))) AS rcomp 
+FROM ships
+JOIN typeship ON ships.`type`=typeship.id
+JOIN resurs ON ships.fleet=resurs.id_f
+JOIN moral ON ships.fleet=moral.id_f
 JOIN norms ON ships.fleet=norms.id_f
 WHERE ships.fleet=?");
 	$q_upd_res->execute([$id_f]);
@@ -137,10 +159,35 @@ WHERE ships.fleet=?");
 	$r_fuel=$upd_res['rfuel']+$fuel;
 	$r_water=$upd_res['rwater']+$water;
 	$r_comp=$upd_res['rcomp']+$comp;
+	if ($fuel<0){$rash['rfuel']=$rash['rfuel']-$fuel;$fuel=0;}
+	if ($water<0){$rash['rwater']=$rash['rwater']-$water;$water=0;}
+	if ($comp<0){$rash['rcomp']=$rash['rcomp']-$comp;$comp=0;}
+	$text=$text."<br>Расход: ".$rash['rfuel']."/".$rash['rwater']."/".$rash['rcomp']." Приход ".$fuel."/".$water."/".$comp;
 	$upd_sh=$pdo->prepare("UPDATE resurs set fuel = ?, water = ?, comp=?, timer = UNIX_TIMESTAMP(NOW()) where id_f=?");
 	$upd_sh->execute(array($r_fuel,$r_water,$r_comp,$id_f));
 	$hist_res=$pdo->prepare("INSERT INTO hist_resurs (timer, id_f, fuel, water, comp, descr) VALUES (UNIX_TIMESTAMP(NOW()), ?, ?, ?, ?, ?)");
 	$hist_res->execute(array($id_f,$r_fuel,$r_water,$r_comp,trim($text)));
+	$ret=array('fuel'=>$r_fuel,'water'=>$r_water,'comp'=>$r_comp);
+	return $ret;
+}
+function control_name($name,$id){
+	global $pdo;
+//ПРОВЕРИТЬ КОРРЕКТНОСТЬ ИМЕНИ! - ok
+	$check_name=$pdo->prepare("select name from destination where name=? and who<>?");
+	$check_name->execute(array($name,$id));
+	if ($check_name->rowCount()<>0) {
+		$qname=$pdo->prepare("select name from ships where id=?");
+		$qname->execute($id);
+		$name=$qname->fetchColumn();
+	}
+	$check_name=$pdo->prepare("select name from ships where name=? and id<>?");
+	$check_name->execute(array($name,$id));
+	if ($check_name->rowCount()<>0) {
+		$qname=$pdo->prepare("select name from ships where id=?");
+		$qname->execute($id);
+		$name=$qname->fetchColumn();
+	}
+	return $name;
 }
 
 function lost_human($fleet,$num,$text) {
@@ -210,5 +257,17 @@ function nnews($autor,$fleet,$text) {
 	$upd_news=$pdo->prepare("INSERT INTO news (fleet,autor,news,timnews) VALUES (?,?,?,unix_timestamp(NOW()))");
 	$upd_news->execute(array($fleet,$autor,$text));
 }
+function master_inform($a){
 
+}
+function status($stat){
+	$b=array('создан','поддержан','согласован','утвержден','начат','остановлен','окончен','запрещен','отклонен');
+	$c=$b[$stat];
+	return $c;
+}
+function final_project(){
+	global $pdo;
+	$q_upd=$pdo->query("update project set flag=7 where flag=4 and timer<unix_timestamp(NOW())");
+	$q_upd->execute();	
+}
 ?>

@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Novosibirsk');
 $host = 'localhost';
 $db   = 'bsg_nav';
 $user = 'root';

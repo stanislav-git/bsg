@@ -5,7 +5,6 @@
 .bx-wrapper {
   position: absolute;
   width:100%;
-  top:34px;
   bottom:5px;
   overflow-y:auto; 
 /*  margin-bottom: 0px; */

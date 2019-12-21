@@ -476,9 +476,7 @@ $num_row=count($anom_data);
 print "<div id='power' style='float:right;width:15%;text-align:right;'>
        <a href='logout.php?logout'><img src='img/power_green.png' style='width:100%;height:auto;'></a></div>";
 echo "<a href='manage_fleet.php?fleet=",$ship_c,"' style='display:block;'><div id='management'><img src='img/geer_gray.png' style='height:100%;width:auto;'></div></a>";
-if ($scanhere>0 and $pos<1000) {print "<a href='#' id='myBtn' style='display:block;'><div id='info'>";} else {print "<div id='info' class='off'>";}
-print "<img src='img/lopata.png'></div>";
-if ($scanhere>0 and $pos<1000) {print "</a>";}
+if ($scanhere>0 and $pos<1000) {print "<a href='#' id='myBtn' style='display:block;'><div id='info'><img src='img/lopata_green.png'></div></a>";} else {print "<div id='info' class='off'><img src='img/lopata.png'></div>";}
 echo "<div id='radar'>
       <img id='im_rad' src='img/radar/",$dest_data[0]['radimage'],"' style='width:100%;height:auto;margin-bottom:0px;text-align:center;'></div>";
 echo "<div style='position:absolute; width:20px;height:20px;z-index:4;top:88px;left:43%;right:55%;'><img class='mark' id='mark1' style='display:none;' src='img/radar/mayk.gif'></div>";

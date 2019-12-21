@@ -3,14 +3,13 @@ session_start();
 include_once('../modul/connect.php');
 include_once('../modul/funct.php');
 
-if (isset($_COOKIE['user'])){
-	$q_fleet=$pdo->prepare("select id_f,dolj from users where id=? LIMIT 1");
-	$q_fleet->execute([$_COOKIE['user']]);
-	$data_fleet=$q_fleet->fetch();
-}
+//if (isset($_COOKIE['user'])){
+//	$q_fleet=$pdo->prepare("select id_f,dolj from users where id=? LIMIT 1");
+//	$q_fleet->execute([$_COOKIE['user']]);
+//	$data_fleet=$q_fleet->fetch();
+//}
 
 if (isset($_SESSION['user_id']) or isset($_COOKIE['user'])){
-	include_once('../modul/funct.php');
 //
 	if (isset($_POST['addfleet'])){
   		if (isset($_POST['ids']) and $_POST['ids']<1000){
@@ -41,7 +40,9 @@ if (isset($_SESSION['user_id']) or isset($_COOKIE['user'])){
 				$ins_norm->execute([$id_flad]);
         	    		$ins_norm = $pdo->prepare("INSERT INTO hist_norms (id_f, n2, n3, p1, n2max, n3max, p1min) VALUES (?, 100, 100,100,100,100,100)");
 				$ins_norm->execute([$id_flad]);
-
+        	    		$ins_vlast = $pdo->prepare("INSERT INTO users (id, id_f, name, access, dolj) VALUES (?, ?, ?, -1,1004)");
+				$vlast='Командование '.$flname;
+				$ins_vlast->execute(array($id_flad,$id_flad,$vlast));
 		//Устанавливаем кораблю номер флота
     				$upship=$pdo->prepare("UPDATE `ships` SET `fleet`=? WHERE  `id`=?");
 	    			$upship->execute(array($id_flad,$id_flad));
@@ -111,7 +112,7 @@ WHERE ships.id=?");
 		$news='Корабль '.$dig['name'].' объявил о забастовке, пока не будут улучшены условия труда';
 		$upd_news=$pdo->prepare("INSERT INTO news (fleet,autor,news,timnews) VALUES (?,'BBC',?,unix_timestamp(NOW()))");
 		$upd_news->execute(array($dig['fleet'],$news));
-  		$q_hmoral=$pdo->prepare("INSERT INTO hist_moral (hist_moral.id_f,hist_moral.vera,hist_moral.hope,hist_moral.timstamt) SELECT moral.id_f,moral.vera,moral.hope,UNIX_TIMESTAMP(NOW()) AS timstamp from moral WHERE moral.`id_f`= ?");
+  		$q_hmoral=$pdo->prepare("INSERT INTO hist_moral (hist_moral.id_f,hist_moral.vera,hist_moral.hope,hist_moral.timstamp) SELECT moral.id_f,moral.vera,moral.hope,UNIX_TIMESTAMP(NOW()) AS timstamp from moral WHERE moral.`id_f`= ?");
 		$q_hmoral->execute([$dig['fleet']]);
   		$q_moral=$pdo->prepare("UPDATE moral SET `hope`=`hope`- 2 WHERE `id_f`= ?");	
 		$q_moral->execute([$dig['fleet']]);
@@ -169,8 +170,6 @@ WHERE ships.id=?");
 			$upd_f->execute(array($rapt1,$namerapt,$rapt1old));
 			$upd_s=$pdo->prepare("UPDATE ships set fleet=? where fleet=?");
 			$upd_s->execute(array($ship,$curr_f));
-			$upd_r=$pdo->prepare("UPDATE hist_norms set id_f=? where id_f=?");
-			$upd_r->execute(array($ship,$curr_f));
 			$upd_r=$pdo->prepare("UPDATE norms set id_f=? where id_f=?");
 			$upd_r->execute(array($ship,$curr_f));
 			$upd_r=$pdo->prepare("UPDATE moral set id_f=? where id_f=?");
@@ -178,6 +177,20 @@ WHERE ships.id=?");
 			$upd_r=$pdo->prepare("UPDATE resurs set id_f=? where id_f=?");
 			$upd_r->execute(array($ship,$curr_f));
 			$upd_r=$pdo->prepare("UPDATE scanning set who=? where who=?");
+			$upd_r->execute(array($ship,$curr_f));
+			$q_proj=$pdo->prepare("update project set id_f=?,vlast=? where id_f=?");
+			$q_proj->execute(array($ship,$ship,$curr_f));
+			$q_user=$pdo->prepare("update users set id_f=? where id_f=?");
+			$q_user->execute(array($ship,$curr_f));
+			$q_user1=$pdo->prepare("update users set access=? where access=?");
+			$q_user1->execute(array($ship,$curr_f));
+			$q_user2=$pdo->prepare("update users set id=? where id=?");
+			$q_user2->execute(array($ship,$curr_f));
+			$q_log1=$pdo->prepare("update hist_resurs set id_f=? where id_f=?");
+			$q_log1->execute(array($ship,$curr_f));
+			$q_log2=$pdo->prepare("update hist_moral set id_f=? where id_f=?");
+			$q_log2->execute(array($ship,$curr_f));
+			$upd_r=$pdo->prepare("UPDATE hist_norms set id_f=? where id_f=?");
 			$upd_r->execute(array($ship,$curr_f));
 			$upd_r=$pdo->prepare("UPDATE news set fleet=? where fleet=?");
 			$upd_r->execute(array($ship,$curr_f));
@@ -187,7 +200,7 @@ WHERE ships.id=?");
 //В отдельный флот
 	if (isset($_POST['fleet_d'])){
 		$ship=(int)trim($_POST['ids']);
-		$q_date=$pdo->prepare("SELECT ships.`name` AS `name`, typeship.sizz as sizz, destination.enemy as enemy, resurs.fuel, resurs.water,
+		$q_date=$pdo->prepare("SELECT ships.`name` AS `name`, ships.user as kag,typeship.sizz as sizz, destination.enemy as enemy, resurs.fuel, resurs.water,
 resurs.comp, norms.n2,norms.n3,norms.p1, moral.vera AS vera, moral.hope AS hope,
 destination.locat AS locat, ships.fleet AS fleet
 FROM ships
@@ -268,28 +281,50 @@ WHERE ships.id=?");
 //Устанавливаем кораблю номер флота
 		$upship=$pdo->prepare("UPDATE `ships` SET `fleet`=? WHERE  `id`=?");
 		$upship->execute(array($ship,$ship));
+//перемещаем владельца корабля - адмиралом
+		$quser=$pdo->prepare("update users set access=?,dolj=2000,id_f=? where id=?");
+		$quser->execute(array($ship,$ship,$old_date['kag']));
+//создаем зак.власть
+       	    	$ins_vlast = $pdo->prepare("INSERT INTO users (id, id_f, name, access, dolj) VALUES (?, ?, ?, -1,1004)");
+		$vlast='Командование '.$name;
+		$ins_vlast->execute(array($ship,$ship,$vlast));
+
 		header('Location: ../admin.php?fleet');
 	}
 //разобрать
+
+//разбор из админки не вызывает изменения морали
 	if (isset($_POST['parseship'])){
 		$fleet=$_POST['fleet'];
 		$ids=$_POST['ids'];	
-		$q_res=$pdo->prepare("select users.name as uname, ships.name as name, ships.human as human, typeship.type as class,
+		$q_res=$pdo->prepare("select users.name as uname, ships.fleet as fleet, ships.name as name, ships.human as human, typeship.type as class,
 ships.descparts as descpart, typeship.cargo as size, typeship.nfuel as nfuel, typeship.nwater as nwater, typeship.ncomp as ncomp 
-from typeship join ships on typeship.id=ships.type join users on ships.user=users.id where ships.id=? LIMIT 1");
+from typeship join ships on typeship.id=ships.type left join users on ships.user=users.id where ships.id=? LIMIT 1");
 		$q_res->execute([$ids]);
 		$res=$q_res->fetch();
-		$desc='Разобран '.$res['size'].' '.$res['class'].' - '.$res['name'].', Ресурсы пошли на нужды флота, уникальные комплектующие: ('.trim($res['descpart']).') переданы владельцу ('.$res['uname'].')';
-		resurs_upd($fleet,$desc,$res['nfuel'],$res['nwater'],$res['ncomp']);
+		$desc='Разобран '.$res['size'].' '.$res['class'].' - '.$res['name'].', Ресурсы пошли на нужды флота, уникальные комплектующие: ('.trim($res['descpart']).') переданы владельцу (';
+		if ($res['uname']==NULL) {$desc.'Командуру флота)';} else {$desc.$res['uname'].')';}
+		resurs_upd($res['fleet'],$desc,$res['nfuel'],$res['nwater'],$res['ncomp']);
 
-		$q_human=$pdo->prepare("SELECT human from ships where id =?");
-		$q_human->execute([$fleet]);
-		$human=$res['human']+$q_human->fetchColumn();
-		$q_upd_human=$pdo->prepare("UPDATE ships set human = ? where id=?");
-		$q_upd_human->execute(array($human,$fleet));
 		$q_del_ship=$pdo->prepare("DELETE FROM ships where id=? LIMIT 1");
 		$q_del_ship->execute(array($ids));
-//МОРАЛЬ
+
+		$q_hum=$pdo->prepare("select count(id) as nship from ships where fleet=? and repair=0");
+		$q_hum->execute([$res['fleet']]);
+		$hum=$q_hum->fetchColumn();
+		if ($hum<>0) {
+			$inshiphum=floor($res['human']/$hum);
+			$flaghum=$res['human']-$inshiphum*$hum;
+			$q_upd_human=$pdo->prepare("UPDATE ships set human = human+ ? where fleet=?");
+			$q_upd_human->execute(array($inshiphum,$res['fleet']));
+			$q_upd_huma=$pdo->prepare("UPDATE ships set human = human+ ? where id=?");
+			$q_upd_huma->execute(array($flaghum,$res['fleet']));
+		} else {
+			$inshiphum=0;
+			$flaghum=$res['human'];
+			$q_upd_hum=$pdo->prepare("UPDATE ships set human = human+ ? where id=?");
+			$q_upd_hum->execute(array($flaghum,$res['fleet']));
+		}
 		header('Location: ../admin.php?ships');
 	}
 //добавить корабль
@@ -316,13 +351,29 @@ from typeship join ships on typeship.id=ships.type join users on ships.user=user
 //			print_r($_POST);
         		$ship=$_POST['flname'];
 	        	$ids=$_POST['ids'];
+	        	$fleet=$_POST['fleet'];
+//проверка имени	        	
+		$check_name=$pdo->prepare("select name from destination where name=? and who<>?");
+		$check_name->execute(array($ship,$ids));
+		if ($check_name->rowCount()<>0) {
+			$qname=$pdo->prepare("select name from ships where id=?");
+			$qname->execute($ids);
+			$ship=$qname->fetchColumn();
+		}
+		$check_name=$pdo->prepare("select name from ships where name=? and id<>?");
+		$check_name->execute(array($ship,$ids));
+		if ($check_name->rowCount()<>0) {
+			$qname=$pdo->prepare("select name from ships where id=?");
+			$qname->execute($ids);
+			$ship=$qname->fetchColumn();
+		}
+//fin		
         		$class=$_POST['class'];
 			$size=$_POST['size'];
 			$qcs=$pdo->prepare("SELECT id from typeship where sizz=? and purp=? LIMIT 1");
 			$qcs->execute(array($size,$class));
 			if ($qcs->rowCount()==1) {$cs=$qcs->fetchColumn();} else {$cs=1;}
         		$human=$_POST['human'];
-	        	$fleet=$_POST['fleet'];
 			$ed_s=$pdo->prepare("UPDATE ships SET name= ?,type= ?, human= ?, fleet= ? WHERE id= ?");
 		        $ed_s->execute(array($ship,$cs,$human,$fleet,$ids));
 		} 

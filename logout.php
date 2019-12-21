@@ -28,10 +28,26 @@ if (isset($_GET['logout'])){
         		$upr->execute(array($b,0,$a));
   		}
 	}
+	if ($_COOKIE['login']=='admin'){
+	 	setcookie('login', '',time()-3600, "/");
+		setcookie('sess', '',time()-3600, "/");
+		setcookie('fleet','',time()-3600,'/');
+		setcookie('user','',time()-3600,'/');
+		setcookie('access','',time()-3600,'/');
+		setcookie('name','',time()-3600,'/');
+		unset($_COOKIE['login']);
+		unset($_COOKIE['sess']);
+		unset($_COOKIE['user']);
+		unset($_COOKIE['access']);
+		unset($_COOKIE['name']);
+		unset($_COOKIE['fleet']);
+	}
 	$_SESSION=array();
 	session_destroy();
  	setcookie('login', '', 1, "/");
 	setcookie('sess', '', 1, "/");
+	unset($_COOKIE['login']);
+	unset($_COOKIE['sess']);
 	if ($death==0){
 		header('Location: testsess.php?err=0'); // перезагружаем файл
 	} else {

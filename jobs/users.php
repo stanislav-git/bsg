@@ -2,6 +2,20 @@
 session_start();
 if (isset($_SESSION['user_id'])){
 	include_once('../modul/connect.php');
+	if (isset($_POST['killuser'])){
+		$id=$_POST['id'];
+		$upd=$pdo->prepare("UPDATE users set live=0 where id=?");
+		$upd->execute([$id]);
+		header('Location: ../admin.php?person');
+		exit;
+	}
+	if (isset($_POST['liveuser'])){
+		$id=$_POST['id'];
+		$upd=$pdo->prepare("UPDATE users set live=1 where id=?");
+		$upd->execute([$id]);
+		header('Location: ../admin.php?person');
+		exit;
+	}
 	if (isset($_POST['addusers'])){
 		$name=trim($_POST['user']);
 		$enemy=$_POST['sylon'];
